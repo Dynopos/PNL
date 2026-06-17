@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DynoPOS — PNL Management Account</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root{
+    --ink:#0E1A1E;--ink-2:#16282E;--bg:#F4F6F4;--surface:#FFF;--border:#E3E7E3;--line:#EDF0ED;
+    --brand:#0B7A60;--brand-deep:#084C3D;--gold:#B8801F;--danger:#C0392B;--danger-bg:#FCEDEA;
+    --ok-bg:#E8F4EF;--muted:#6A746F;--txt:#152025;
+    --mono:ui-monospace,"SF Mono","Menlo","Consolas","Roboto Mono",monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);background:var(--bg);color:var(--txt);line-height:1.5;-webkit-font-smoothing:antialiased;padding-bottom:60px}
+  .wrap{max-width:680px;margin:0 auto;padding:0 14px}
+  header{background:var(--ink);color:#fff;padding:18px 14px 16px;border-bottom:3px solid var(--brand)}
+  header .wrap{padding:0}
+  .brand{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .brand h1{font-size:22px;font-weight:800;letter-spacing:-.5px}
+  .brand .tech{font-size:11px;font-weight:600;letter-spacing:3px;color:var(--brand);text-transform:uppercase;align-self:center}
+  header p{font-size:12px;color:#9DB0AB;margin-top:4px;font-family:var(--mono)}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-top:16px;overflow:hidden}
+  .card-h{padding:13px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  .card-h .num{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--brand);background:var(--ok-bg);width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .card-h h2{font-size:14px;font-weight:700}
+  .card-b{padding:10px 16px 14px}
+  .fld{display:block;font-size:12px;font-weight:700;margin:8px 0 4px;color:var(--ink-2)}
+  input[type=text],input[type=number],select.sel{width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--sans);background:#fff;color:var(--txt)}
+  input:focus,select:focus{outline:none;border-color:var(--brand)}
+  .mrow2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .drop{border:2px dashed #C4D0CB;border-radius:12px;padding:22px 16px;text-align:center;background:#FBFCFB;cursor:pointer}
+  .drop:active{background:#F0F4F2}
+  .drop .ic{font-size:28px}.drop .t{font-weight:700;margin-top:4px}.drop .s{font-size:12px;color:var(--muted);margin-top:3px}
+  input[type=file]{display:none}
+  .banks{font-size:11px;color:var(--muted);text-align:center;margin-top:8px;font-family:var(--mono)}
+  .status{margin-top:10px;font-size:13px;font-family:var(--mono);color:var(--muted);text-align:center;min-height:18px}
+  .status.err{color:var(--danger);font-family:var(--sans);text-align:left;line-height:1.5}
+  .spin{display:inline-block;width:14px;height:14px;border:2px solid #cfd8d4;border-top-color:var(--brand);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:6px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .b-add{background:var(--brand);color:#fff;width:100%;margin-top:10px}
+  .b-add:active{background:var(--brand-deep)}
+  button{font-family:var(--sans);cursor:pointer;border:none;border-radius:9px;font-weight:700;font-size:14px;padding:11px 16px}
+  .manitem{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+  .manitem:last-child{border-bottom:none}
+  .manitem .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .manitem .x{color:var(--danger);font-weight:800;cursor:pointer;padding:0 4px}
+  .tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;background:var(--ok-bg);color:var(--brand-deep);flex-shrink:0}
+  .tag.out{background:var(--danger-bg);color:var(--danger)}
+  .pnltitle{text-align:center;margin-top:18px}
+  .pnltitle .biz{font-size:18px;font-weight:800;letter-spacing:-.3px}
+  .pnltitle .t1{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--brand);margin-top:2px}
+  .pnltitle .t2{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px}
+  .bankchip{display:inline-flex;align-items:center;gap:6px;background:var(--ok-bg);color:var(--brand-deep);font-weight:700;font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid #BFE0D4;margin-top:8px}
+  .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+  .row:last-child{border-bottom:none}
+  .row .k{font-size:13px}.row .v{font-family:var(--mono);font-size:13px;font-weight:600;white-space:nowrap;text-align:right}
+  .row .bar{display:block;height:4px;border-radius:2px;background:var(--brand);margin-top:5px;opacity:.5}
+  .row.sub .k{color:var(--muted);font-size:12.5px}
+  .row.total{border-top:2px solid var(--ink);border-bottom:none;margin-top:4px;padding-top:11px}
+  .row.total .k{font-weight:800}.row.total .v{font-weight:800}
+  .row.grand{background:var(--ink);color:#fff;margin:10px -16px 0;padding:14px 16px;border:none}
+  .row.grand .k{font-weight:800;color:#fff}.row.grand .v{font-weight:800;color:#fff;font-size:17px}
+  .row.grand.neg{background:#5A1E18}
+  .cost{color:var(--danger)}.pos{color:var(--brand)}
+  .kpct{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .note{background:#FBF7EC;border:1px solid #EBDFC2;border-radius:10px;padding:12px 14px;margin-top:12px}
+  .note .nt{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+  .note ul{list-style:none;font-size:12.5px;color:var(--ink-2)}
+  .note li{padding:3px 0 3px 16px;position:relative}
+  .note li::before{content:"›";position:absolute;left:2px;color:var(--gold);font-weight:800}
+  .kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 16px}
+  .kpi{border:1px solid var(--border);border-radius:10px;padding:11px 12px}
+  .kpi .lab{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+  .kpi .big{font-family:var(--mono);font-size:17px;font-weight:800;margin-top:3px;letter-spacing:-.5px}
+  .kpi .sub{font-size:11px;color:var(--muted);margin-top:1px}
+  .kpi.accent{background:var(--ink);border-color:var(--ink)}
+  .kpi.accent .lab{color:var(--brand)}.kpi.accent .big{color:#fff}.kpi.accent .sub{color:#9DB0AB}
+  .chk{margin-top:14px;border-radius:10px;padding:12px 14px;font-size:12.5px;background:var(--ok-bg);border:1px solid #BFE0D4;color:var(--brand-deep)}
+  .chk b{display:block;text-transform:uppercase;font-size:11px;letter-spacing:.6px;margin-bottom:4px}
+  .txn{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line)}
+  .txn:last-child{border-bottom:none}
+  .txn .td{flex:1;min-width:0}.txn .desc{font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .txn .meta{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .txn select{font-family:var(--sans);font-size:11.5px;padding:5px 6px;border:1px solid var(--border);border-radius:7px;background:#fff;max-width:140px}
+  .txn select.unc{border-color:var(--danger);background:var(--danger-bg);color:var(--danger);font-weight:700}
+  .toolbar{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}
+  .b-ghost{background:#fff;color:var(--ink-2);border:1px solid var(--border)}.b-ghost:active{background:#F0F2F0}
+  .foot{text-align:center;font-size:10.5px;color:var(--muted);font-family:var(--mono);margin:18px 0 6px;line-height:1.7}
+  #report{display:none}#report.show{display:block;animation:fade .35s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @media print{body{background:#fff;padding:0}#infoCard,#uploadCard,#manualCard,#reviewCard,.toolbar,.foot{display:none!important}.card{break-inside:avoid}header,.row.grand,.kpi.accent{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="brand"><h1>DynoPOS</h1><span class="tech">Technologies</span></div>
+  <p>PNL Management Account · Bank + Manual</p>
+</div></header>
+
+<div class="wrap">
+  <!-- INFO -->
+  <div class="card" id="infoCard">
+    <div class="card-h"><span class="num">i</span><h2>Maklumat Report</h2></div>
+    <div class="card-b">
+      <label class="fld">Nama Perniagaan</label>
+      <input type="text" id="bizName" placeholder="cth: ABC Enterprise" oninput="render()">
+      <label class="fld">Bulan / Tempoh</label>
+      <input type="text" id="period" placeholder="cth: Mei 2026" oninput="render()">
+    </div>
+  </div>
+
+  <!-- UPLOAD -->
+  <div class="card" id="uploadCard">
+    <div class="card-h"><span class="num">↥</span><h2>Upload Statement Bank</h2></div>
+    <div class="card-b">
+      <label class="drop" for="file">
+        <div class="ic">📄</div>
+        <div class="t">Tekan untuk pilih statement PDF</div>
+        <div class="s">CIMB / Maybank · auto-detect (boleh skip kalau nak guna manual je)</div>
+      </label>
+      <input type="file" id="file" accept="application/pdf,.pdf">
+      <div class="banks">Bank disokong: CIMB · Maybank</div>
+      <div class="status" id="status"></div>
+    </div>
+  </div>
+
+  <!-- MANUAL -->
+  <div class="card" id="manualCard">
+    <div class="card-h"><span class="num">+</span><h2>Tambah Income / Expense (Tunai &amp; Lain-lain)</h2></div>
+    <div class="card-b">
+      <label class="fld">Jenis</label>
+      <select class="sel" id="m_type" onchange="refreshCat()">
+        <option value="in">Income — Duit Masuk</option>
+        <option value="out">Expense — Duit Keluar</option>
+      </select>
+      <div class="mrow2">
+        <div><label class="fld">Jumlah (RM)</label><input type="number" id="m_amt" placeholder="0.00" inputmode="decimal"></div>
+        <div><label class="fld" id="catlbl">Sumber / Kategori</label><select class="sel" id="m_cat"></select></div>
+      </div>
+      <label class="fld">Keterangan</label>
+      <input type="text" id="m_desc" placeholder="cth: Jualan tunai kedai">
+      <button class="b-add" onclick="addManual()">+ Tambah</button>
+      <div id="manList" style="margin-top:10px"></div>
+    </div>
+  </div>
+
+  <!-- REPORT -->
+  <div id="report">
+    <div class="pnltitle">
+      <div class="biz" id="rptBiz"></div>
+      <div class="t1">PNL Management Account</div>
+      <div class="t2" id="rptSub"></div>
+      <span class="bankchip" id="bankchip" style="display:none"></span>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><span class="num">1</span><h2>Jualan (Sales)</h2></div>
+      <div class="card-b" id="incRows"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><span class="num">2</span><h2>Perbelanjaan Bisnes</h2></div>
+      <div class="card-b" id="bizRows"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><span class="num">3</span><h2>Owner's Drawing <span style="font-weight:400;color:var(--muted);font-size:11px">(bukan expense bisnes)</span></h2></div>
+      <div class="card-b" id="ownerRows"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><span class="num">4</span><h2>Belum Pasti</h2></div>
+      <div class="card-b" id="uncRows"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><span class="num">5</span><h2>Untung Bisnes Sebenar</h2></div>
+      <div class="card-b">
+        <div class="row"><span class="k">Jualan POS</span><span class="v" id="p_sales"></span></div>
+        <div class="row"><span class="k">Expense Bisnes</span><span class="v cost" id="p_exp"></span></div>
+        <div class="row grand" id="netrow"><span class="k">Untung Bisnes</span><span class="v" id="p_net"></span></div>
+        <div class="row" style="margin-top:6px"><span class="k">Margin</span><span class="v" id="p_margin"></span></div>
+        <div class="note"><div class="nt">Nota</div><ul id="note"></ul></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><span class="num">★</span><h2>Ringkasan Eksekutif</h2></div>
+      <div class="kpis">
+        <div class="kpi"><div class="lab">Jualan POS</div><div class="big pos" id="k_sales"></div><div class="sub" id="k_incn"></div></div>
+        <div class="kpi"><div class="lab">Expense Bisnes</div><div class="big cost" id="k_exp"></div><div class="sub" id="k_expn"></div></div>
+        <div class="kpi"><div class="lab">Owner's Drawing</div><div class="big" id="k_owner" style="color:var(--gold)"></div><div class="sub" id="k_ownern"></div></div>
+        <div class="kpi accent"><div class="lab">Untung Bisnes</div><div class="big" id="k_net"></div><div class="sub" id="k_margin"></div></div>
+      </div>
+    </div>
+
+    <div class="chk" id="chk" style="display:none"></div>
+    <div class="toolbar">
+      <button class="b-ghost" onclick="window.scrollTo({top:0,behavior:'smooth'})">Ke Atas</button>
+      <button class="b-ghost" onclick="window.print()">Simpan / Cetak PDF</button>
+    </div>
+
+    <div class="card" id="reviewCard">
+      <div class="card-h"><span class="num">⇄</span><h2>Semak & Betulkan Kategori</h2></div>
+      <div class="card-b">
+        <div style="font-size:11.5px;color:var(--muted);margin:6px 0 8px">Tukar kategori mana-mana perbelanjaan — pecahan kira semula automatik. Merah = belum pasti.</div>
+        <div id="txnList"></div>
+      </div>
+    </div>
+  </div>
+  <div class="foot" id="foot"></div>
+</div>
+
+<script>
+if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const BANKS=[
+  {id:'cimb',name:'CIMB',
+   detect:t=>/CIMB/i.test(t)&&t.indexOf('OPENING BALANCE')>=0,
+   start:t=>t.indexOf('OPENING BALANCE'),
+   end:t=>{const i=t.indexOf('CLOSING BALANCE');return i<0?t.length:i;}},
+  {id:'maybank',name:'Maybank',
+   detect:t=>/Maybank/i.test(t)&&t.indexOf('BEGINNING BALANCE')>=0,
+   start:t=>t.indexOf('BEGINNING BALANCE'),
+   end:t=>{const m=/ENDING BALANCE\s*:/.exec(t);return m?m.index:t.length;}}
+];
+const INC_SRC=[
+ {key:'sales',label:'Jualan POS / Sistem',grp:'sales',kw:[]},
+ {key:'modal',label:'Modal / Transfer Sendiri',grp:'owner',kw:['i-funds tr from sa','i-funds tr from ca']},
+ {key:'rebate',label:'Rebate / Refund',grp:'owner',kw:['autopay cr','ibg credit','bukku ref earn']},
+ {key:'tunai',label:'Tunai (Manual)',grp:'sales',kw:[]},
+ {key:'lain',label:'Lain-lain (Manual)',grp:'sales',kw:[]}
+];
+const INC_LABEL={}; INC_SRC.forEach(s=>INC_LABEL[s.key]=s.label);
+const EXP_CATS=[
+ // --- OWNER'S DRAWING (peribadi/family — diperiksa dahulu, lebih spesifik) ---
+ {key:'o_family',label:"Owner: Family",grp:'owner',kw:['family expensive','famly expensive','abg prebet','colek bini']},
+ {key:'o_anak',label:"Owner: Anak / Sekolah",grp:'owner',kw:['tusyen','yuran pasti','mia maira','mia micha']},
+ {key:'o_rumah',label:"Owner: Rumah / Utiliti Rumah",grp:'owner',kw:['tnb rumah','tnb siantan','tnb office','sewa bulanan']},
+ {key:'logistik',label:'Kos Hantar / Logistik',grp:'biz',kw:['hariandiran','barang bas','barang -bus','barang-bus','hantar barg','pos brg']},
+ {key:'o_savings',label:"Owner: Transfer ke Savings",grp:'owner',kw:['tr to savings','tr to c/a']},
+ {key:'o_kereta',label:"Owner: Kereta Peribadi",grp:'owner',kw:['naza','myvi','bezza','bezaa']},
+ {key:'o_loan',label:"Owner: Loan Kereta / Rumah",grp:'owner',kw:['loan']},
+ {key:'o_makan',label:"Owner: Makan / Belanja Peribadi",grp:'owner',kw:['aeon','mydin','sports direct','brands outlet','kfc','sushi','uncle chua','in saff','phd-','umart','ngofee','diy accessories','mr diy','eco-pasir','farm fresh','mycu-mayang','bumi emas','kumaju']},
+ // --- EXPENSE BISNES ---
+ {key:'ads',label:'Iklan / Marketing',grp:'biz',kw:['facebk','facebook','tiktok ad','tiktok promote','google ads','iklan','boost','google*tiktok']},
+ {key:'soft',label:'Software / Langganan',grp:'biz',kw:['bukku','chatgpt','claude','google one','google invoice','google business','google capcut','google*capcu','google*heyge','google*kling','google photo','google chatg','google faceb','heygen','kling ai','openart','photoroom','capcut','supercool','skool','invoice maker','subscription','langganan','storehub','canva','adobe']},
+ {key:'stok',label:'Stok / Hardware POS',grp:'biz',kw:['ti computer','j and e future','ezc tech','nl berkat','rcs communication','aje solution','redsoft','weighing','pole display','dual screen','monitor','laptop','cpu','hardware','screen pos','penimbang','cable lan','name kad dynopos','2 set pc','distributor','auto part','printer','router']},
+ {key:'gaji',label:'Gaji / Upah Staff',grp:'biz',kw:['gaji','salary','elaun','allowance','staff','pekerja','upah','2job']},
+ {key:'veh',label:'Kenderaan / Minyak (Staff)',grp:'biz',kw:['minyak saga','myk saga','myk beza','minyak bez','service saga','servis ','claim tayar','elaun outation','petron','shell','ctx ','caltex','bhp']},
+ {key:'sewa',label:'Sewa / Pejabat',grp:'biz',kw:['sewa pejabat','rental','office','pejabat']},
+ {key:'telco',label:'Utiliti / Insurans / Telco',grp:'biz',kw:['maxis','celcom','digi','umobile','unifi','telco','broadband','chubb','takaful','coway','cuckoo']},
+ {key:'bankfee',label:'Caj Bank / ATM',grp:'biz',kw:['debit card fee','withdrawal fees','atm withdrawal at meps','atm withdrawal']},
+ {key:'unc',label:'Belum Pasti',grp:'unc',kw:[]}
+];
+const EXP_LABEL={}; EXP_CATS.forEach(c=>EXP_LABEL[c.key]=c.label);
+let TX=[], BANK='', mid=0;
+
+refreshCat();
+document.getElementById('file').addEventListener('change',async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const st=document.getElementById('status'); st.className='status';
+  st.innerHTML='<span class="spin"></span>Membaca '+f.name+' ...';
+  try{
+    const text=await extractText(f);
+    const res=parse(text);
+    if(res.error){st.className='status err';st.textContent='⚠ '+res.error;return;}
+    TX=TX.filter(t=>t.source!=='bank').concat(res.tx);  // replace bank txns, keep manual
+    BANK=res.bankName;
+    st.textContent='Selesai — '+BANK+', '+res.tx.length+' transaksi bank.';
+    render();
+  }catch(err){
+    st.className='status err';
+    st.textContent='⚠ Gagal baca PDF: '+(err.message||err)+'. Kalau statement ni gambar/scan, ia tak boleh dibaca automatik.';
+  }
+});
+
+function refreshCat(){
+  const type=document.getElementById('m_type').value;
+  const sel=document.getElementById('m_cat');
+  document.getElementById('catlbl').textContent = type==='in'?'Sumber':'Kategori';
+  if(type==='in') sel.innerHTML=INC_SRC.filter(s=>s.key==='sales'||s.key==='tunai'||s.key==='lain').map(s=>'<option value="'+s.key+'">'+s.label+'</option>').join('');
+  else sel.innerHTML=EXP_CATS.filter(c=>c.key!=='unc').map(c=>'<option value="'+c.key+'">'+c.label+'</option>').join('');
+}
+function addManual(){
+  const type=document.getElementById('m_type').value;
+  const desc=document.getElementById('m_desc').value.trim();
+  const amt=parseFloat(document.getElementById('m_amt').value);
+  const cat=document.getElementById('m_cat').value;
+  if(!amt||amt<=0){alert('Masukkan jumlah yang sah.');return;}
+  const grp = type==='in' ? (INC_SRC.find(s=>s.key===cat)||{}).grp||'sales' : (EXP_CATS.find(c=>c.key===cat)||{}).grp||'unc';
+  TX.push({amt:amt, dir:type, desc:desc||(type==='in'?'Income manual':'Expense manual'), key:cat, grp:grp, source:'manual', id:'m'+(++mid)});
+  document.getElementById('m_desc').value=''; document.getElementById('m_amt').value='';
+  render();
+}
+function delTx(id){ TX=TX.filter(t=>t.id!==id); render(); }
+
+async function extractText(file){
+  const buf=await file.arrayBuffer();
+  const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+  let out=[];
+  for(let p=1;p<=pdf.numPages;p++){
+    const page=await pdf.getPage(p);
+    const tc=await page.getTextContent();
+    let items=tc.items.map(it=>({s:it.str,x:it.transform[4],y:it.transform[5]}));
+    items.sort((a,b)=> Math.abs(a.y-b.y)>2 ? b.y-a.y : a.x-b.x);
+    let cur=[],cy=null;
+    for(const it of items){
+      if(cy===null||Math.abs(it.y-cy)<=2){cur.push(it); if(cy===null)cy=it.y;}
+      else{out.push(cur.map(i=>i.s).join(' '));cur=[it];cy=it.y;}
+    }
+    if(cur.length)out.push(cur.map(i=>i.s).join(' '));
+  }
+  return out.join('\n');
+}
+function parse(full){
+  const bank=BANKS.find(b=>b.detect(full));
+  if(!bank) return {error:'Bank belum disokong. Sekarang baca CIMB & Maybank. Hantar contoh statement bank ni untuk ditambah.'};
+  const s=bank.start(full); if(s<0) return {error:'Tak jumpa penanda baki untuk '+bank.name+'.'};
+  const body=full.slice(s, bank.end(full));
+  const lines=body.split('\n');
+  const NUM=/\d{1,3}(?:,\d{3})*\.\d{2}/;          // single match (no g) — safe to reuse, no lastIndex state
+  const DATE_LINE=/^(\d{2}\/\d{2}\/\d{4})\s+(.*)$/;
+  const obNum=NUM.exec(lines[0]||'');
+  if(!obNum) return {error:'Tak jumpa baki pembukaan.'};
+  let prev=parseFloat(obNum[0].replace(/,/g,''));
+  const tx=[]; let n=0;
+  let li=1;
+  while(li<lines.length){
+    const ln=(lines[li]||'').trim();
+    const m=DATE_LINE.exec(ln);
+    if(!m){ li++; continue; }
+    const rest=m[2];
+    const nums=rest.match(/\d{1,3}(?:,\d{3})*\.\d{2}/g);
+    if(!nums||nums.length<2){ li++; continue; } // bukan baris transaksi sah — abaikan, jangan reka nombor
+    const amt=parseFloat(nums[nums.length-2].replace(/,/g,''));
+    const bal=parseFloat(nums[nums.length-1].replace(/,/g,''));
+    const firstNumIdx=rest.search(/\d{1,3}(?:,\d{3})*\.\d{2}/);
+    const descParts=[rest.slice(0,firstNumIdx<0?rest.length:firstNumIdx).trim()];
+    let nj=li+1;
+    while(nj<lines.length && !DATE_LINE.test((lines[nj]||'').trim())){
+      const t=(lines[nj]||'').trim(); if(t) descParts.push(t); nj++;
+    }
+    const fullDesc=descParts.filter(Boolean).join(' ');
+    const delta=Math.round((bal-prev)*100)/100;
+    const dir=delta>0?'in':'out';
+    const key=dir==='in'?incCatOf(fullDesc):expCatOf(fullDesc);
+    const grp=dir==='in'?incGrpOf(key):expGrpOf(key);
+    tx.push({amt,dir,desc:clean(fullDesc),key,grp,source:'bank',id:'b'+(n++)});
+    prev=bal;
+    li=nj;
+  }
+  if(tx.length<1) return {error:'Tak dapat baca sebarang transaksi. Cuba semak format statement.'};
+  return {tx, bankName:bank.name};
+}
+function expCatOf(desc){const d=desc.toLowerCase();for(const c of EXP_CATS){if(c.kw.length&&c.kw.some(k=>d.includes(k)))return c.key;}return 'unc';}
+function expGrpOf(key){const c=EXP_CATS.find(c=>c.key===key);return c?c.grp:'unc';}
+function incCatOf(desc){const d=desc.toLowerCase();for(const c of INC_SRC){if(c.kw.length&&c.kw.some(k=>d.includes(k)))return c.key;}return 'sales';}
+function incGrpOf(key){const c=INC_SRC.find(c=>c.key===key);return c?c.grp:'sales';}
+function clean(d){let x=d.replace(/\b\d{6,}\b/g,'').replace(/\b\d{2}\/\d{2}\/\d{2,4}\b/g,' ').replace(/^\s*\d{2}\/\d{2}\s*/,'').replace(/\s+/g,' ').trim();return x.length>46?x.slice(0,46)+'…':(x||'(tiada keterangan)');}
+function fmt(n){return 'RM '+Math.abs(n).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});}
+
+function render(){
+  renderManual();
+  if(TX.length===0){document.getElementById('report').classList.remove('show');return;}
+
+  const inc=TX.filter(t=>t.dir==='in'), out=TX.filter(t=>t.dir==='out');
+  const totalIn=inc.reduce((s,t)=>s+t.amt,0), totalOut=out.reduce((s,t)=>s+t.amt,0);
+
+  const salesTx = inc.filter(t=>t.grp==='sales');
+  const ownerInTx = inc.filter(t=>t.grp==='owner');
+  const bizTx = out.filter(t=>t.grp==='biz');
+  const ownerOutTx = out.filter(t=>t.grp==='owner');
+  const uncTx = out.filter(t=>t.grp==='unc');
+
+  const sales=salesTx.reduce((s,t)=>s+t.amt,0);
+  const bizExp=bizTx.reduce((s,t)=>s+t.amt,0);
+  const ownerExp=ownerOutTx.reduce((s,t)=>s+t.amt,0);
+  const uncExp=uncTx.reduce((s,t)=>s+t.amt,0);
+
+  const net=sales-bizExp, margin=sales?net/sales*100:0;
+  const cashNet=totalIn-totalOut;
+
+  document.getElementById('rptBiz').textContent=document.getElementById('bizName').value||'Perniagaan Anda';
+  const per=document.getElementById('period').value;
+  document.getElementById('rptSub').textContent=(per?per+' \u00b7 ':'')+inc.length+' masuk \u00b7 '+out.length+' keluar';
+  const chip=document.getElementById('bankchip');
+  if(BANK){chip.style.display='';chip.textContent='\u25cf Bank dikesan: '+BANK;} else chip.style.display='none';
+
+  const ia={}; INC_SRC.forEach(s=>ia[s.key]=0);
+  inc.forEach(t=>ia[t.key]=(ia[t.key]||0)+t.amt);
+  let ih='';
+  INC_SRC.filter(s=>s.grp==='sales'&&ia[s.key]>0).forEach(s=>{
+    ih+='<div class="row sub"><span class="k">'+s.label+'</span><span class="v pos">'+fmt(ia[s.key])+'</span></div>';
+  });
+  if(!ih) ih='<div class="row sub"><span class="k" style="color:#aaa">\u2014 tiada jualan \u2014</span><span class="v"></span></div>';
+  ih+='<div class="row total"><span class="k">Total Jualan</span><span class="v pos">'+fmt(sales)+'</span></div>';
+  const ownerInRows=INC_SRC.filter(s=>s.grp==='owner'&&ia[s.key]>0);
+  if(ownerInRows.length){
+    ih+='<div class="note" style="margin-top:10px"><div class="nt">Bukan Jualan</div><ul>'+ownerInRows.map(s=>'<li>'+s.label+' \u2014 '+fmt(ia[s.key])+' (modal/rebate owner, tak dikira jualan)</li>').join('')+'</ul></div>';
+  }
+  document.getElementById('incRows').innerHTML=ih;
+
+  const ba={}; EXP_CATS.filter(c=>c.grp==='biz').forEach(c=>ba[c.key]=0);
+  bizTx.forEach(t=>ba[t.key]=(ba[t.key]||0)+t.amt);
+  const bizOrdered=EXP_CATS.filter(c=>c.grp==='biz'&&ba[c.key]>0).sort((a,b)=>ba[b.key]-ba[a.key]);
+  let bh='';
+  bizOrdered.forEach(c=>{const v=ba[c.key],pct=bizExp?(v/bizExp*100):0;
+    bh+='<div class="row"><span class="k">'+c.label+'<span class="bar" style="width:'+Math.max(pct,3)+'%"></span></span><span class="v">'+fmt(v)+'<br><span class="kpct">'+pct.toFixed(1)+'%</span></span></div>';});
+  if(!bizOrdered.length) bh='<div class="row sub"><span class="k" style="color:#aaa">\u2014 tiada expense bisnes \u2014</span><span class="v"></span></div>';
+  bh+='<div class="row total"><span class="k">Total Expense Bisnes</span><span class="v cost">'+fmt(bizExp)+'</span></div>';
+  document.getElementById('bizRows').innerHTML=bh;
+
+  const oa={}; EXP_CATS.filter(c=>c.grp==='owner').forEach(c=>oa[c.key]=0);
+  ownerOutTx.forEach(t=>oa[t.key]=(oa[t.key]||0)+t.amt);
+  const ownerOrdered=EXP_CATS.filter(c=>c.grp==='owner'&&oa[c.key]>0).sort((a,b)=>oa[b.key]-oa[a.key]);
+  let oh='';
+  ownerOrdered.forEach(c=>{const v=oa[c.key],pct=ownerExp?(v/ownerExp*100):0;
+    oh+='<div class="row"><span class="k">'+c.label.replace('Owner: ','')+'<span class="bar" style="width:'+Math.max(pct,3)+'%;background:var(--gold)"></span></span><span class="v" style="color:var(--gold)">'+fmt(v)+'<br><span class="kpct">'+pct.toFixed(1)+'%</span></span></div>';});
+  if(!ownerOrdered.length) oh='<div class="row sub"><span class="k" style="color:#aaa">\u2014 tiada owner\u2019s drawing \u2014</span><span class="v"></span></div>';
+  oh+='<div class="row total"><span class="k">Total Owner\u2019s Drawing</span><span class="v" style="color:var(--gold)">'+fmt(ownerExp)+'</span></div>';
+  document.getElementById('ownerRows').innerHTML=oh;
+
+  let uh='';
+  if(uncTx.length){
+    uh='<div class="row"><span class="k">Bilangan transaksi</span><span class="v">'+uncTx.length+'</span></div>';
+    uh+='<div class="row total"><span class="k">Total Belum Pasti</span><span class="v cost">'+fmt(uncExp)+'</span></div>';
+    uh+='<div class="note"><div class="nt">Tindakan</div><ul><li>Tukar kategori setiap item kat bahagian "Semak &amp; Betulkan Kategori" di bawah \u2014 pilih Bisnes atau Owner.</li></ul></div>';
+  } else {
+    uh='<div class="row sub"><span class="k" style="color:#aaa">\u2014 semua sudah dikategorikan \u2014</span><span class="v"></span></div>';
+  }
+  document.getElementById('uncRows').innerHTML=uh;
+
+  document.getElementById('p_sales').textContent=fmt(sales);
+  document.getElementById('p_exp').textContent='('+fmt(bizExp)+')';
+  document.getElementById('p_net').textContent=(net<0?'\u2212 ':'')+fmt(net);
+  document.getElementById('netrow').className='row grand'+(net<0?' neg':'');
+  document.getElementById('p_margin').textContent=margin.toFixed(2)+'%';
+  const note=[];
+  note.push(net<0?('Defisit bisnes '+fmt(net)+' \u2014 expense bisnes lebih dari jualan.'):('Untung bisnes '+fmt(net)+' (Jualan \u2212 Expense Bisnes).'));
+  note.push('Owner\u2019s Drawing '+fmt(ownerExp)+' BUKAN expense bisnes \u2014 ia duit owner ambil untuk peribadi/family.');
+  if(uncTx.length>0) note.push(uncTx.length+' transaksi "Belum Pasti" ('+fmt(uncExp)+') belum dikira \u2014 tag dahulu untuk angka tepat.');
+  note.push('Semakan cashflow: baki bank gerak '+(cashNet<0?'turun ':'naik ')+fmt(cashNet)+' (masuk '+fmt(totalIn)+' \u2212 keluar '+fmt(totalOut)+').');
+  document.getElementById('note').innerHTML=note.map(n=>'<li>'+n+'</li>').join('');
+
+  document.getElementById('k_sales').textContent=fmt(sales);
+  document.getElementById('k_incn').textContent=salesTx.length+' transaksi';
+  document.getElementById('k_exp').textContent=fmt(bizExp);
+  document.getElementById('k_expn').textContent=bizTx.length+' transaksi';
+  document.getElementById('k_owner').textContent=fmt(ownerExp);
+  document.getElementById('k_ownern').textContent=ownerOutTx.length+' transaksi peribadi';
+  document.getElementById('k_net').textContent=(net<0?'\u2212 ':'')+fmt(net);
+  document.getElementById('k_margin').textContent='Margin '+margin.toFixed(1)+'%';
+
+  const chk=document.getElementById('chk');
+  if(BANK){const bi=TX.filter(t=>t.source==='bank'&&t.dir==='in'),bo=TX.filter(t=>t.source==='bank'&&t.dir==='out');
+    chk.style.display='';
+    chk.innerHTML='<b>Semakan Bank (cashflow)</b>'+bi.length+' masuk = '+fmt(bi.reduce((s,t)=>s+t.amt,0))+' \u00b7 '+bo.length+' keluar = '+fmt(bo.reduce((s,t)=>s+t.amt,0))+'. Banding dengan jumlah rasmi statement (no. pengeluaran/deposit kat muka akhir statement).';
+  } else chk.style.display='none';
+
+  renderTxns();
+  document.getElementById('report').classList.add('show');
+  document.getElementById('foot').innerHTML='Dijana oleh DynoPOS Technologies \u00b7 Dikira dalam peranti \u00b7 Tiada data dihantar ke server';
+}
+function renderManual(){
+  const ms=TX.filter(t=>t.source==='manual');
+  const box=document.getElementById('manList');
+  if(!ms.length){box.innerHTML='<div style="font-size:12px;color:var(--muted);padding:6px 0">Belum ada entri manual.</div>';return;}
+  box.innerHTML=ms.map(t=>'<div class="manitem"><span class="tag '+(t.dir==='out'?'out':'')+'">'+(t.dir==='in'?'Masuk':'Keluar')+'</span><span class="nm">'+esc(t.desc)+'</span><span class="kpct">'+fmt(t.amt)+'</span><span class="x" onclick="delTx(\''+t.id+'\')">✕</span></div>').join('');
+}
+function optHtml(sel){return EXP_CATS.map(c=>'<option value="'+c.key+'"'+(sel===c.key?' selected':'')+'>'+c.label+'</option>').join('');}
+function grpBadge(grp){
+  if(grp==='biz') return '<span class="tag" style="background:var(--ok-bg);color:var(--brand-deep)">BISNES</span>';
+  if(grp==='owner') return '<span class="tag" style="background:#FBF1DD;color:var(--gold)">OWNER</span>';
+  return '<span class="tag out">BELUM PASTI</span>';
+}
+function renderTxns(){
+  const out=TX.filter(t=>t.dir==='out').slice().sort((a,b)=>(a.grp==='unc'?0:1)-(b.grp==='unc'?0:1));
+  if(!out.length){document.getElementById('txnList').innerHTML='<div style="font-size:12px;color:var(--muted)">Tiada perbelanjaan.</div>';return;}
+  document.getElementById('txnList').innerHTML=out.map(t=>{
+    const idx=TX.indexOf(t);
+    return '<div class="txn"><div class="td"><div class="desc">'+grpBadge(t.grp)+' '+esc(t.desc)+(t.source==='manual'?' ·manual':'')+'</div><div class="meta">'+fmt(t.amt)+'</div></div>'+
+    '<select class="'+(t.grp==='unc'?'unc':'')+'" onchange="recat('+idx+',this.value)">'+optHtml(t.key)+'</select></div>';
+  }).join('');
+}
+function recat(idx,key){TX[idx].key=key;TX[idx].grp=(EXP_CATS.find(c=>c.key===key)||{}).grp||'unc';render();}
+function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+</script>
+</body>
+</html>
