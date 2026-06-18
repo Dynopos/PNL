@@ -206,7 +206,7 @@
     <div class="card" id="reviewCard">
       <div class="card-h"><span class="num">⇄</span><h2>Semak & Betulkan Kategori</h2></div>
       <div class="card-b">
-        <div style="font-size:11.5px;color:var(--muted);margin:6px 0 8px">Tukar kategori mana-mana perbelanjaan — pecahan kira semula automatik. Merah = belum pasti.</div>
+        <div style="font-size:11.5px;color:var(--muted);margin:6px 0 8px">Semua perbelanjaan diletakkan sebagai <b>Lain-lain</b> secara lalai. Tukar kategori yang perlu — pecahan kira semula automatik.</div>
         <div id="txnList"></div>
       </div>
     </div>
@@ -254,6 +254,7 @@ const EXP_CATS=[
  {key:'sewa',label:'Sewa / Pejabat',grp:'biz',kw:['sewa pejabat','rental','office','pejabat']},
  {key:'telco',label:'Utiliti / Insurans / Telco',grp:'biz',kw:['maxis','celcom','digi','umobile','unifi','telco','broadband','chubb','takaful','coway','cuckoo']},
  {key:'bankfee',label:'Caj Bank / ATM',grp:'biz',kw:['debit card fee','withdrawal fees','atm withdrawal at meps','atm withdrawal']},
+ {key:'lain',label:'Lain-lain Perbelanjaan',grp:'biz',kw:[]},
  {key:'unc',label:'Belum Pasti',grp:'unc',kw:[]}
 ];
 const EXP_LABEL={}; EXP_CATS.forEach(c=>EXP_LABEL[c.key]=c.label);
@@ -347,8 +348,8 @@ function parse(full){
     const fullDesc=descParts.filter(Boolean).join(' ');
     const delta=Math.round((bal-prev)*100)/100;
     const dir=delta>0?'in':'out';
-    const key=dir==='in'?incCatOf(fullDesc):expCatOf(fullDesc);
-    const grp=dir==='in'?incGrpOf(key):expGrpOf(key);
+    const key=dir==='in'?'sales':'lain';
+    const grp=dir==='in'?'sales':'biz';
     tx.push({amt,dir,desc:clean(fullDesc),key,grp,source:'bank',id:'b'+(n++)});
     prev=bal;
     li=nj;
