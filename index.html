@@ -80,9 +80,9 @@
   .kpi.accent .lab{color:var(--brand)}.kpi.accent .big{color:#fff}.kpi.accent .sub{color:#9DB0AB}
   .chk{margin-top:14px;border-radius:10px;padding:12px 14px;font-size:12.5px;background:var(--ok-bg);border:1px solid #BFE0D4;color:var(--brand-deep)}
   .chk b{display:block;text-transform:uppercase;font-size:11px;letter-spacing:.6px;margin-bottom:4px}
-  .txn{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line)}
+  .txn{display:flex;align-items:flex-start;gap:8px;padding:9px 0;border-bottom:1px solid var(--line)}
   .txn:last-child{border-bottom:none}
-  .txn .td{flex:1;min-width:0}.txn .desc{font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .txn .td{flex:1;min-width:0}.txn .desc{font-size:12.5px;word-break:break-word;white-space:normal}
   .txn .meta{font-family:var(--mono);font-size:11px;color:var(--muted)}
   .txn select{font-family:var(--sans);font-size:11.5px;padding:5px 6px;border:1px solid var(--border);border-radius:7px;background:#fff;max-width:140px}
   .txn select.unc{border-color:var(--danger);background:var(--danger-bg);color:var(--danger);font-weight:700}
@@ -360,7 +360,7 @@ function expCatOf(desc){const d=desc.toLowerCase();for(const c of EXP_CATS){if(c
 function expGrpOf(key){const c=EXP_CATS.find(c=>c.key===key);return c?c.grp:'unc';}
 function incCatOf(desc){const d=desc.toLowerCase();for(const c of INC_SRC){if(c.kw.length&&c.kw.some(k=>d.includes(k)))return c.key;}return 'sales';}
 function incGrpOf(key){const c=INC_SRC.find(c=>c.key===key);return c?c.grp:'sales';}
-function clean(d){let x=d.replace(/\b\d{6,}\b/g,'').replace(/\b\d{2}\/\d{2}\/\d{2,4}\b/g,' ').replace(/^\s*\d{2}\/\d{2}\s*/,'').replace(/\s+/g,' ').trim();return x.length>46?x.slice(0,46)+'…':(x||'(tiada keterangan)');}
+function clean(d){let x=d.replace(/\b\d{6,}\b/g,'').replace(/\b\d{2}\/\d{2}\/\d{2,4}\b/g,' ').replace(/^\s*\d{2}\/\d{2}\s*/,'').replace(/\s+/g,' ').trim();return x||'(tiada keterangan)';}
 function fmt(n){return 'RM '+Math.abs(n).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});}
 
 function render(){
