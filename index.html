@@ -86,6 +86,22 @@
   .txn .meta{font-family:var(--mono);font-size:11px;color:var(--muted)}
   .txn select{font-family:var(--sans);font-size:11.5px;padding:5px 6px;border:1px solid var(--border);border-radius:7px;background:#fff;max-width:140px}
   .txn select.unc{border-color:var(--danger);background:var(--danger-bg);color:var(--danger);font-weight:700}
+  #ruleToast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a2a25;color:#fff;padding:11px 16px;border-radius:10px;font-size:13px;z-index:999;gap:10px;align-items:center;box-shadow:0 4px 20px rgba(0,0,0,.35);max-width:90vw}
+  #ruleToast button{border:none;border-radius:7px;padding:5px 12px;font-size:12px;cursor:pointer;font-weight:700}
+  #ruleToast .rt-yes{background:var(--brand);color:#fff}
+  #ruleToast .rt-no{background:transparent;color:#9DB0AB;border:1px solid #3a4a45}
+  .catmgr{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+  .catmgr summary{font-size:12px;font-weight:700;cursor:pointer;color:var(--brand);user-select:none}
+  .catmgr-body{margin-top:10px}
+  .mgr-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:10px 0 4px}
+  .mgr-label:first-child{margin-top:0}
+  .rulitem,.catitem{display:flex;align-items:center;gap:6px;padding:5px 0;font-size:11.5px;border-bottom:1px solid var(--line)}
+  .rulitem:last-child,.catitem:last-child{border-bottom:none}
+  .del-btn{color:var(--danger);font-weight:800;cursor:pointer;padding:0 5px;font-size:15px;background:none;border:none;line-height:1;flex-shrink:0}
+  .cadd{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+  .cadd input{flex:1;min-width:80px;padding:7px 9px;border:1px solid var(--border);border-radius:7px;font-size:12px;font-family:var(--sans);background:#fff}
+  .cadd select{padding:7px 9px;border:1px solid var(--border);border-radius:7px;font-size:12px;font-family:var(--sans);background:#fff}
+  .cadd .b-sm{padding:7px 13px;background:var(--brand);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer}
   .toolbar{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}
   .b-ghost{background:#fff;color:var(--ink-2);border:1px solid var(--border)}.b-ghost:active{background:#F0F2F0}
   .foot{text-align:center;font-size:10.5px;color:var(--muted);font-family:var(--mono);margin:18px 0 6px;line-height:1.7}
@@ -206,12 +222,31 @@
     <div class="card" id="reviewCard">
       <div class="card-h"><span class="num">⇄</span><h2>Semak & Betulkan Kategori</h2></div>
       <div class="card-b">
-        <div style="font-size:11.5px;color:var(--muted);margin:6px 0 8px">Semua perbelanjaan diletakkan sebagai <b>Lain-lain</b> secara lalai. Tukar kategori yang perlu — pecahan kira semula automatik.</div>
+        <div style="font-size:11.5px;color:var(--muted);margin:6px 0 8px">App auto-kategorikan berdasarkan keyword. Tukar mana yang salah — sistem simpan rule untuk transaksi akan datang.</div>
         <div id="txnList"></div>
+        <details class="catmgr" id="catMgr">
+          <summary>⚙ Urus Kategori &amp; Rules Auto</summary>
+          <div class="catmgr-body">
+            <div class="mgr-label">Tambah Kategori Custom</div>
+            <div class="cadd">
+              <input type="text" id="cc_name" placeholder="Nama kategori cth: Dividen">
+              <select id="cc_grp"><option value="biz">Bisnes</option><option value="owner">Owner</option></select>
+              <button class="b-sm" onclick="addCustomCat()">Tambah</button>
+            </div>
+            <div id="catList"></div>
+            <div class="mgr-label" style="margin-top:14px">Rules Auto-Kategori Tersimpan</div>
+            <div id="ruleList"></div>
+          </div>
+        </details>
       </div>
     </div>
   </div>
   <div class="foot" id="foot"></div>
+</div>
+<div id="ruleToast" style="display:none">
+  <span class="rt-msg" style="flex:1"></span>
+  <button class="rt-yes" onclick="confirmRule()">Ya, Save</button>
+  <button class="rt-no" onclick="dismissToast()">Skip</button>
 </div>
 
 <script>
@@ -246,12 +281,13 @@ const EXP_CATS=[
  {key:'o_loan',label:"Owner: Loan Kereta / Rumah",grp:'owner',kw:['loan']},
  {key:'o_makan',label:"Owner: Makan / Belanja Peribadi",grp:'owner',kw:['aeon','mydin','sports direct','brands outlet','kfc','sushi','uncle chua','in saff','phd-','umart','ngofee','diy accessories','mr diy','eco-pasir','farm fresh','mycu-mayang','bumi emas','kumaju']},
  // --- EXPENSE BISNES ---
- {key:'ads',label:'Iklan / Marketing',grp:'biz',kw:['facebk','facebook','tiktok ad','tiktok promote','google ads','iklan','boost','google*tiktok']},
+ {key:'ads',label:'Iklan / Marketing',grp:'biz',kw:['facebk','facebook','meta ','tiktok ad','tiktok promote','google ads','iklan','boost','google*tiktok']},
  {key:'soft',label:'Software / Langganan',grp:'biz',kw:['bukku','chatgpt','claude','google one','google invoice','google business','google capcut','google*capcu','google*heyge','google*kling','google photo','google chatg','google faceb','heygen','kling ai','openart','photoroom','capcut','supercool','skool','invoice maker','subscription','langganan','storehub','canva','adobe']},
- {key:'stok',label:'Stok / Hardware POS',grp:'biz',kw:['ti computer','j and e future','ezc tech','nl berkat','rcs communication','aje solution','redsoft','weighing','pole display','dual screen','monitor','laptop','cpu','hardware','screen pos','penimbang','cable lan','name kad dynopos','2 set pc','distributor','auto part','printer','router']},
- {key:'gaji',label:'Gaji / Upah Staff',grp:'biz',kw:['gaji','salary','elaun','allowance','staff','pekerja','upah','2job']},
+ {key:'stok',label:'Stok / Inventori / COGS',grp:'biz',kw:['ti computer','j and e future','ezc tech','nl berkat','rcs communication','aje solution','redsoft','weighing','pole display','dual screen','monitor','laptop','cpu','hardware','screen pos','penimbang','cable lan','name kad dynopos','2 set pc','distributor','auto part','printer','router','shopee','lazada','supplier','inventory','stock ']},
+ {key:'gaji',label:'Gaji / Upah Staff',grp:'biz',kw:['gaji','salary','elaun','allowance','staff','pekerja','upah','2job','wages']},
  {key:'veh',label:'Kenderaan / Minyak (Staff)',grp:'biz',kw:['minyak saga','myk saga','myk beza','minyak bez','service saga','servis ','claim tayar','elaun outation','petron','shell','ctx ','caltex','bhp']},
- {key:'sewa',label:'Sewa / Pejabat',grp:'biz',kw:['sewa pejabat','rental','office','pejabat']},
+ {key:'sewa',label:'Sewa / Pejabat',grp:'biz',kw:['sewa pejabat','rental','office','pejabat','rent ']},
+ {key:'hutang',label:'Bayaran Hutang / Paylater',grp:'biz',kw:['paylater','pay later','atome','kredivo','home credit','credit card','kad kredit','instalment','ansuran','flexi','loan repay']},
  {key:'telco',label:'Utiliti / Insurans / Telco',grp:'biz',kw:['maxis','celcom','digi','umobile','unifi','telco','broadband','chubb','takaful','coway','cuckoo']},
  {key:'bankfee',label:'Caj Bank / ATM',grp:'biz',kw:['debit card fee','withdrawal fees','atm withdrawal at meps','atm withdrawal']},
  {key:'lain',label:'Lain-lain Perbelanjaan',grp:'biz',kw:[]},
@@ -259,6 +295,10 @@ const EXP_CATS=[
 ];
 const EXP_LABEL={}; EXP_CATS.forEach(c=>EXP_LABEL[c.key]=c.label);
 let TX=[], BANK='', mid=0;
+let CUSTOM_CATS=JSON.parse(localStorage.getItem('pnl_cats')||'[]');
+let CUSTOM_RULES=JSON.parse(localStorage.getItem('pnl_rules')||'[]');
+function allExpCats(){return [...EXP_CATS,...CUSTOM_CATS];}
+function saveStorage(){localStorage.setItem('pnl_cats',JSON.stringify(CUSTOM_CATS));localStorage.setItem('pnl_rules',JSON.stringify(CUSTOM_RULES));}
 
 refreshCat();
 document.getElementById('file').addEventListener('change',async e=>{
@@ -284,7 +324,7 @@ function refreshCat(){
   const sel=document.getElementById('m_cat');
   document.getElementById('catlbl').textContent = type==='in'?'Sumber':'Kategori';
   if(type==='in') sel.innerHTML=INC_SRC.filter(s=>s.key==='sales'||s.key==='tunai'||s.key==='lain').map(s=>'<option value="'+s.key+'">'+s.label+'</option>').join('');
-  else sel.innerHTML=EXP_CATS.filter(c=>c.key!=='unc').map(c=>'<option value="'+c.key+'">'+c.label+'</option>').join('');
+  else sel.innerHTML=allExpCats().filter(c=>c.key!=='unc').map(c=>'<option value="'+c.key+'">'+c.label+'</option>').join('');
 }
 function addManual(){
   const type=document.getElementById('m_type').value;
@@ -348,8 +388,8 @@ function parse(full){
     const fullDesc=descParts.filter(Boolean).join(' ');
     const delta=Math.round((bal-prev)*100)/100;
     const dir=delta>0?'in':'out';
-    const key=dir==='in'?'sales':'lain';
-    const grp=dir==='in'?'sales':'biz';
+    const key=dir==='in'?'sales':expCatOf(fullDesc);
+    const grp=dir==='in'?'sales':expGrpOf(key);
     tx.push({amt,dir,desc:clean(fullDesc),key,grp,source:'bank',id:'b'+(n++)});
     prev=bal;
     li=nj;
@@ -357,8 +397,13 @@ function parse(full){
   if(tx.length<1) return {error:'Tak dapat baca sebarang transaksi. Cuba semak format statement.'};
   return {tx, bankName:bank.name};
 }
-function expCatOf(desc){const d=desc.toLowerCase();for(const c of EXP_CATS){if(c.kw.length&&c.kw.some(k=>d.includes(k)))return c.key;}return 'unc';}
-function expGrpOf(key){const c=EXP_CATS.find(c=>c.key===key);return c?c.grp:'unc';}
+function expCatOf(desc){
+  const d=desc.toLowerCase();
+  for(const r of CUSTOM_RULES){if(d.includes(r.pattern))return r.key;}
+  for(const c of allExpCats()){if(c.kw.length&&c.kw.some(k=>d.includes(k)))return c.key;}
+  return 'lain';
+}
+function expGrpOf(key){const c=allExpCats().find(c=>c.key===key);return c?c.grp:'biz';}
 function incCatOf(desc){const d=desc.toLowerCase();for(const c of INC_SRC){if(c.kw.length&&c.kw.some(k=>d.includes(k)))return c.key;}return 'sales';}
 function incGrpOf(key){const c=INC_SRC.find(c=>c.key===key);return c?c.grp:'sales';}
 function clean(d){let x=d.replace(/\b\d{6,}\b/g,'').replace(/\b\d{2}\/\d{2}\/\d{2,4}\b/g,' ').replace(/^\s*\d{2}\/\d{2}\s*/,'').replace(/\s+/g,' ').trim();return x||'(tiada keterangan)';}
@@ -405,9 +450,9 @@ function render(){
   }
   document.getElementById('incRows').innerHTML=ih;
 
-  const ba={}; EXP_CATS.filter(c=>c.grp==='biz').forEach(c=>ba[c.key]=0);
+  const ba={}; allExpCats().filter(c=>c.grp==='biz').forEach(c=>ba[c.key]=0);
   bizTx.forEach(t=>ba[t.key]=(ba[t.key]||0)+t.amt);
-  const bizOrdered=EXP_CATS.filter(c=>c.grp==='biz'&&ba[c.key]>0).sort((a,b)=>ba[b.key]-ba[a.key]);
+  const bizOrdered=allExpCats().filter(c=>c.grp==='biz'&&ba[c.key]>0).sort((a,b)=>ba[b.key]-ba[a.key]);
   let bh='';
   bizOrdered.forEach(c=>{const v=ba[c.key],pct=bizExp?(v/bizExp*100):0;
     bh+='<div class="row"><span class="k">'+c.label+'<span class="bar" style="width:'+Math.max(pct,3)+'%"></span></span><span class="v">'+fmt(v)+'<br><span class="kpct">'+pct.toFixed(1)+'%</span></span></div>';});
@@ -415,9 +460,9 @@ function render(){
   bh+='<div class="row total"><span class="k">Total Expense Bisnes</span><span class="v cost">'+fmt(bizExp)+'</span></div>';
   document.getElementById('bizRows').innerHTML=bh;
 
-  const oa={}; EXP_CATS.filter(c=>c.grp==='owner').forEach(c=>oa[c.key]=0);
+  const oa={}; allExpCats().filter(c=>c.grp==='owner').forEach(c=>oa[c.key]=0);
   ownerOutTx.forEach(t=>oa[t.key]=(oa[t.key]||0)+t.amt);
-  const ownerOrdered=EXP_CATS.filter(c=>c.grp==='owner'&&oa[c.key]>0).sort((a,b)=>oa[b.key]-oa[a.key]);
+  const ownerOrdered=allExpCats().filter(c=>c.grp==='owner'&&oa[c.key]>0).sort((a,b)=>oa[b.key]-oa[a.key]);
   let oh='';
   ownerOrdered.forEach(c=>{const v=oa[c.key],pct=ownerExp?(v/ownerExp*100):0;
     oh+='<div class="row"><span class="k">'+c.label.replace('Owner: ','')+'<span class="bar" style="width:'+Math.max(pct,3)+'%;background:var(--gold)"></span></span><span class="v" style="color:var(--gold)">'+fmt(v)+'<br><span class="kpct">'+pct.toFixed(1)+'%</span></span></div>';});
@@ -472,7 +517,7 @@ function renderManual(){
   if(!ms.length){box.innerHTML='<div style="font-size:12px;color:var(--muted);padding:6px 0">Belum ada entri manual.</div>';return;}
   box.innerHTML=ms.map(t=>'<div class="manitem"><span class="tag '+(t.dir==='out'?'out':'')+'">'+(t.dir==='in'?'Masuk':'Keluar')+'</span><span class="nm">'+esc(t.desc)+'</span><span class="kpct">'+fmt(t.amt)+'</span><span class="x" onclick="delTx(\''+t.id+'\')">✕</span></div>').join('');
 }
-function optHtml(sel){return EXP_CATS.map(c=>'<option value="'+c.key+'"'+(sel===c.key?' selected':'')+'>'+c.label+'</option>').join('');}
+function optHtml(sel){return allExpCats().filter(c=>c.key!=='unc').map(c=>'<option value="'+c.key+'"'+(sel===c.key?' selected':'')+'>'+c.label+'</option>').join('');}
 function grpBadge(grp){
   if(grp==='biz') return '<span class="tag" style="background:var(--ok-bg);color:var(--brand-deep)">BISNES</span>';
   if(grp==='owner') return '<span class="tag" style="background:#FBF1DD;color:var(--gold)">OWNER</span>';
@@ -487,8 +532,66 @@ function renderTxns(){
     '<select class="'+(t.grp==='unc'?'unc':'')+'" onchange="recat('+idx+',this.value)">'+optHtml(t.key)+'</select></div>';
   }).join('');
 }
-function recat(idx,key){TX[idx].key=key;TX[idx].grp=(EXP_CATS.find(c=>c.key===key)||{}).grp||'unc';render();}
+function recat(idx,key){
+  const t=TX[idx];
+  t.key=key; t.grp=(allExpCats().find(c=>c.key===key)||{}).grp||'biz';
+  render();
+  showRuleToast(t.desc,key);
+}
 function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+let _pendingRule=null;
+function showRuleToast(desc,key){
+  const words=desc.toLowerCase().replace(/[^a-z0-9\s]/g,' ').trim().split(/\s+/).slice(0,4).join(' ');
+  if(!words||words.length<3) return;
+  if(CUSTOM_RULES.some(r=>r.pattern===words&&r.key===key)) return;
+  _pendingRule={pattern:words,key};
+  const cat=allExpCats().find(c=>c.key===key);
+  const toast=document.getElementById('ruleToast');
+  toast.querySelector('.rt-msg').textContent='"'+words+'…" → '+(cat?cat.label:key)+'?';
+  toast.style.display='flex';
+  if(window._toastT) clearTimeout(window._toastT);
+  window._toastT=setTimeout(dismissToast,9000);
+}
+function confirmRule(){
+  if(!_pendingRule) return;
+  CUSTOM_RULES=CUSTOM_RULES.filter(r=>r.pattern!==_pendingRule.pattern);
+  CUSTOM_RULES.push(_pendingRule);
+  saveStorage(); _pendingRule=null; dismissToast(); renderRuleList();
+}
+function dismissToast(){_pendingRule=null;document.getElementById('ruleToast').style.display='none';}
+
+function addCustomCat(){
+  const name=document.getElementById('cc_name').value.trim();
+  const grp=document.getElementById('cc_grp').value;
+  if(!name){alert('Masukkan nama kategori.');return;}
+  const key='cc_'+Date.now();
+  CUSTOM_CATS.push({key,label:name,grp,kw:[]});
+  saveStorage(); document.getElementById('cc_name').value='';
+  refreshCat(); renderCatList();
+}
+function delCustomCat(key){
+  CUSTOM_CATS=CUSTOM_CATS.filter(c=>c.key!==key);
+  saveStorage(); refreshCat(); renderCatList();
+}
+function delRule(idx){
+  CUSTOM_RULES.splice(idx,1);
+  saveStorage(); renderRuleList();
+}
+function renderCatList(){
+  const el=document.getElementById('catList'); if(!el) return;
+  if(!CUSTOM_CATS.length){el.innerHTML='<div style="font-size:11px;color:var(--muted);padding:4px 0">Belum ada kategori custom.</div>';return;}
+  el.innerHTML=CUSTOM_CATS.map(c=>'<div class="catitem"><span style="flex:1">'+esc(c.label)+'</span><span style="color:var(--muted);font-size:11px;margin-right:4px">'+(c.grp==='biz'?'Bisnes':'Owner')+'</span><button class="del-btn" onclick="delCustomCat(\''+c.key+'\')">×</button></div>').join('');
+}
+function renderRuleList(){
+  const el=document.getElementById('ruleList'); if(!el) return;
+  if(!CUSTOM_RULES.length){el.innerHTML='<div style="font-size:11px;color:var(--muted);padding:4px 0">Belum ada rules tersimpan. Tukar kategori mana-mana transaksi untuk mula save rule.</div>';return;}
+  el.innerHTML=CUSTOM_RULES.map((r,i)=>{
+    const cat=allExpCats().find(c=>c.key===r.key);
+    return '<div class="rulitem"><span style="flex:1;font-family:var(--mono);font-size:11px">'+esc(r.pattern)+'</span><span style="color:var(--muted);margin:0 6px">→</span><span style="color:var(--brand);font-size:11.5px">'+esc(cat?cat.label:r.key)+'</span><button class="del-btn" onclick="delRule('+i+')">×</button></div>';
+  }).join('');
+}
+renderCatList(); renderRuleList();
 </script>
 </body>
 </html>
