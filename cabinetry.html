@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fine Cabinetry.Co — Bespoke Luxury Cabinetry</title>
+<style>
+  :root {
+    --bg:       #0F0D0B;
+    --bg2:      #181208;
+    --gold:     #C9A84C;
+    --gold-lt:  #E8D5A3;
+    --gold-dim: #7A6228;
+    --text:     #F5F2EC;
+    --muted:    #7A7570;
+    --serif:    Georgia, 'Times New Roman', serif;
+    --sans:     system-ui, -apple-system, sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: var(--sans); background: var(--bg); color: var(--text); overflow-x: hidden; }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+    padding: 22px 6vw;
+    display: flex; justify-content: space-between; align-items: center;
+    background: linear-gradient(to bottom, rgba(15,13,11,.85) 0%, transparent 100%);
+  }
+  .nav-logo {
+    font-family: var(--serif); font-size: 18px; letter-spacing: 1px;
+    color: var(--text); text-decoration: none;
+  }
+  .nav-logo span { color: var(--gold); }
+  .nav-links { display: flex; gap: 28px; }
+  .nav-links a {
+    color: var(--muted); text-decoration: none;
+    font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase;
+    transition: color .2s;
+  }
+  .nav-links a:hover { color: var(--gold); }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative; height: 100vh; min-height: 580px;
+    overflow: hidden; background: var(--bg);
+  }
+  #hero-canvas {
+    position: absolute; inset: 0;
+    width: 100% !important; height: 100% !important;
+    display: block;
+  }
+  .hero-overlay {
+    position: absolute; inset: 0;
+    display: flex; align-items: center;
+    pointer-events: none;
+  }
+  .hero-text {
+    padding: 0 6vw; max-width: 500px;
+    pointer-events: auto;
+  }
+  .hero-eyebrow {
+    font-size: 10px; letter-spacing: 4px; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 18px;
+  }
+  .hero-title {
+    font-family: var(--serif);
+    font-size: clamp(34px, 4.5vw, 62px);
+    font-weight: 400; line-height: 1.12;
+    color: var(--text); margin-bottom: 20px; letter-spacing: -.3px;
+  }
+  .hero-title em { font-style: italic; color: var(--gold-lt); }
+  .hero-sub {
+    font-size: 14.5px; color: var(--muted); line-height: 1.75;
+    margin-bottom: 38px; max-width: 360px;
+  }
+  .btn {
+    display: inline-block; padding: 13px 32px;
+    border: 1px solid var(--gold); color: var(--gold);
+    text-decoration: none; font-size: 10.5px;
+    letter-spacing: 2.5px; text-transform: uppercase;
+    transition: background .3s, color .3s;
+  }
+  .btn:hover { background: var(--gold); color: var(--bg); }
+
+  /* Loading ring */
+  .hero-loader {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: flex-end;
+    padding-right: 12vw; pointer-events: none;
+    transition: opacity .6s ease;
+  }
+  .loader-ring {
+    width: 44px; height: 44px;
+    border: 1px solid rgba(201,168,76,.18);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 1.2s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .hero-loader.hidden { opacity: 0; pointer-events: none; }
+
+  /* Scroll hint */
+  .hero-scroll {
+    position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    color: var(--gold-dim); font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  }
+  .scroll-line {
+    width: 1px; height: 38px;
+    background: linear-gradient(to bottom, var(--gold-dim), transparent);
+    animation: scrollpulse 2s ease-in-out infinite;
+  }
+  @keyframes scrollpulse {
+    0%,100% { opacity: .3; } 50% { opacity: 1; }
+  }
+
+  /* ── SECTIONS ── */
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 0 6vw; }
+  .section { padding: 88px 0; }
+  .section-label {
+    font-size: 10px; letter-spacing: 4px; text-transform: uppercase;
+    color: var(--gold-dim); margin-bottom: 14px;
+  }
+  .section-title {
+    font-family: var(--serif);
+    font-size: clamp(26px, 3.2vw, 42px);
+    font-weight: 400; line-height: 1.2;
+    color: var(--text); margin-bottom: 16px;
+  }
+  .gold-rule { width: 38px; height: 1px; background: var(--gold); margin-bottom: 24px; }
+  .section-body { font-size: 14.5px; color: var(--muted); line-height: 1.85; max-width: 540px; }
+
+  /* Collections grid */
+  .col-grid {
+    display: grid; grid-template-columns: repeat(3,1fr);
+    gap: 1px; background: #1A1510;
+    border: 1px solid #1A1510; margin-top: 48px;
+  }
+  .col-card {
+    background: var(--bg); padding: 36px 28px;
+    transition: background .25s; cursor: pointer;
+  }
+  .col-card:hover { background: #161209; }
+  .col-icon {
+    width: 30px; height: 30px;
+    border: 1px solid var(--gold-dim);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 22px;
+  }
+  .col-icon svg { width: 14px; height: 14px; stroke: var(--gold); fill: none; stroke-width: 1.2; }
+  .col-name {
+    font-family: var(--serif); font-size: 18px; font-weight: 400;
+    color: var(--text); margin-bottom: 10px;
+  }
+  .col-desc { font-size: 13px; color: var(--muted); line-height: 1.7; }
+
+  /* Quote */
+  .quote-section {
+    padding: 80px 0; text-align: center;
+    border-top: 1px solid #1A1510; border-bottom: 1px solid #1A1510;
+  }
+  .quote-text {
+    font-family: var(--serif); font-style: italic;
+    font-size: clamp(20px, 2.5vw, 30px); font-weight: 400;
+    color: var(--text); line-height: 1.5; max-width: 680px; margin: 0 auto 20px;
+  }
+  .quote-attr { font-size: 11px; letter-spacing: 2px; color: var(--gold-dim); text-transform: uppercase; }
+
+  hr.divider { border: none; border-top: 1px solid #1A1510; }
+
+  footer {
+    text-align: center; padding: 44px 20px;
+    font-size: 11px; color: var(--muted); letter-spacing: 1px;
+  }
+  footer strong { color: var(--gold-dim); font-weight: 400; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .hero-overlay { align-items: flex-end; padding-bottom: 100px; }
+    .hero-text { padding: 0 20px; text-align: center; max-width: 100%; }
+    .hero-sub { max-width: 100%; }
+    .col-grid { grid-template-columns: 1fr; }
+  }
+  @media print {
+    nav, .hero-scroll, .hero-loader { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">Fine Cabinetry<span>.Co</span></a>
+  <div class="nav-links">
+    <a href="#collections">Collections</a>
+    <a href="#bespoke">Bespoke</a>
+    <a href="#about">About</a>
+    <a href="#contact">Contact</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <canvas id="hero-canvas"></canvas>
+
+  <div class="hero-loader" id="heroLoader">
+    <div class="loader-ring"></div>
+  </div>
+
+  <div class="hero-overlay">
+    <div class="hero-text">
+      <p class="hero-eyebrow">Est. 2018 &nbsp;·&nbsp; Handcrafted Luxury</p>
+      <h1 class="hero-title">The Art of<br><em>Bespoke</em><br>Cabinetry</h1>
+      <p class="hero-sub">Where master craftsmanship meets enduring elegance. Each piece is tailored to your vision and built to last generations.</p>
+      <a href="#collections" class="btn">Explore Collections</a>
+    </div>
+  </div>
+
+  <div class="hero-scroll">
+    <div class="scroll-line"></div>
+    <span>Scroll</span>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="section" id="about">
+  <div class="wrap">
+    <p class="section-label">Our Philosophy</p>
+    <h2 class="section-title">Crafted with purpose,<br>built for legacy</h2>
+    <div class="gold-rule"></div>
+    <p class="section-body">Every Fine Cabinetry piece begins as a conversation — your space, your lifestyle, your vision. Our master craftsmen translate these into heirloom-quality furniture that defines a room for decades.</p>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- COLLECTIONS -->
+<section class="section" id="collections">
+  <div class="wrap">
+    <p class="section-label">Collections</p>
+    <h2 class="section-title">Select your style</h2>
+    <div class="gold-rule"></div>
+
+    <div class="col-grid">
+      <div class="col-card">
+        <div class="col-icon">
+          <svg viewBox="0 0 14 14"><rect x="1" y="1" width="12" height="12" rx=".4"/><line x1="7" y1="1" x2="7" y2="13"/></svg>
+        </div>
+        <div class="col-name">Noir Series</div>
+        <p class="col-desc">Ebony and matte black lacquer with brushed gold hardware. Dramatic contrast for the bold interior.</p>
+      </div>
+      <div class="col-card">
+        <div class="col-icon">
+          <svg viewBox="0 0 14 14"><rect x="1" y="2" width="12" height="10" rx=".4"/><line x1="4" y1="2" x2="4" y2="12"/><line x1="10" y1="2" x2="10" y2="12"/></svg>
+        </div>
+        <div class="col-name">Ivory &amp; Gold</div>
+        <p class="col-desc">Crisp white with 24K gold leaf accents. Timeless elegance that transforms any living space.</p>
+      </div>
+      <div class="col-card">
+        <div class="col-icon">
+          <svg viewBox="0 0 14 14"><path d="M1 13 L1 4 L7 1 L13 4 L13 13"/><line x1="7" y1="13" x2="7" y2="7"/><line x1="4" y1="13" x2="4" y2="9"/><line x1="10" y1="13" x2="10" y2="9"/></svg>
+        </div>
+        <div class="col-name">Bespoke</div>
+        <p class="col-desc">Entirely custom — your dimensions, your finishes, your vision. No two pieces are ever the same.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- QUOTE -->
+<section class="quote-section" id="bespoke">
+  <div class="wrap">
+    <p class="quote-text">"True luxury is not about excess — it is about the perfect fit between an object and the life it serves."</p>
+    <p class="quote-attr">Fine Cabinetry.Co &nbsp;·&nbsp; Atelier Manifesto</p>
+  </div>
+</section>
+
+<hr class="divider">
+
+<footer id="contact">
+  <p><strong>Fine Cabinetry.Co</strong> &nbsp;·&nbsp; Handcrafted luxury since 2018 &nbsp;·&nbsp; All rights reserved</p>
+</footer>
+
+<!-- THREE.JS via importmap -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const heroEl  = document.getElementById('hero');
+const loader  = document.getElementById('heroLoader');
+let   inited  = false;
+
+// Lazy-init: only spin up Three.js once hero enters viewport
+const obs = new IntersectionObserver(entries => {
+  if (entries[0].isIntersecting && !inited) {
+    inited = true;
+    obs.disconnect();
+    initScene();
+  }
+}, { threshold: 0.05 });
+obs.observe(heroEl);
+
+function initScene() {
+  const canvas  = document.getElementById('hero-canvas');
+  const mobile  = window.innerWidth < 768;
+
+  /* ── RENDERER ── */
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, mobile ? 1.5 : 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
+  renderer.toneMapping       = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+  renderer.setClearColor(0x0F0D0B);
+  setSize();
+
+  /* ── SCENE ── */
+  const scene = new THREE.Scene();
+  scene.fog   = new THREE.FogExp2(0x0F0D0B, 0.055);
+
+  /* Environment (makes metalness shine properly) */
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
+  pmrem.dispose();
+
+  /* ── CAMERA ── */
+  const camera = new THREE.PerspectiveCamera(38, canvas.clientWidth / canvas.clientHeight, 0.1, 60);
+  const camX   = mobile ? 0 : 1.1;
+  camera.position.set(camX, 0.5, 5.2);
+
+  /* ── CONTROLS ── */
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.target.set(camX, 0, 0);
+  controls.enableZoom      = false;
+  controls.enablePan       = false;
+  controls.autoRotate      = true;
+  controls.autoRotateSpeed = 0.55;
+  controls.minPolarAngle   = Math.PI * 0.28;
+  controls.maxPolarAngle   = Math.PI * 0.66;
+  controls.update();
+
+  /* ── MATERIALS ── */
+  const goldMat = new THREE.MeshStandardMaterial({
+    color: 0xC9A84C, metalness: 0.95, roughness: 0.15, envMapIntensity: 1.4,
+  });
+  const darkGoldMat = new THREE.MeshStandardMaterial({
+    color: 0x7A5A18, metalness: 0.85, roughness: 0.28,
+  });
+  const bodyMat = new THREE.MeshStandardMaterial({
+    color: 0x130F08, roughness: 0.50, metalness: 0.06,
+  });
+  const doorMat = new THREE.MeshStandardMaterial({
+    color: 0x1C1509, roughness: 0.38, metalness: 0.09,
+  });
+  const insetMat = new THREE.MeshStandardMaterial({
+    color: 0x0D0A05, roughness: 0.60, metalness: 0.03,
+  });
+
+  /* ── CABINET ── */
+  const cab = new THREE.Group();
+
+  const BW = 1.55, BH = 2.3, BD = 0.54;
+
+  // Main carcass
+  const body = new THREE.Mesh(new THREE.BoxGeometry(BW, BH, BD), bodyMat);
+  body.castShadow = body.receiveShadow = true;
+  cab.add(body);
+
+  // Gold vertical corner beads
+  [-1, 1].forEach(sx => {
+    const bead = new THREE.Mesh(new THREE.BoxGeometry(0.038, BH, 0.038), goldMat);
+    bead.position.set(sx * (BW / 2 + 0.019 - 0.002), 0, 0);
+    cab.add(bead);
+  });
+
+  // Gold top + bottom cap rails
+  [-1, 1].forEach(sy => {
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(BW + 0.08, 0.042, BD + 0.06), goldMat);
+    rail.position.y = sy * (BH / 2 + 0.021);
+    cab.add(rail);
+  });
+
+  // Two door panels
+  const doorW  = (BW * 0.865) / 2;
+  const doorH  = BH * 0.84;
+  const doorZ  = BD / 2 + 0.013;
+
+  [-1, 1].forEach(side => {
+    const cx = side * (doorW / 2 + 0.015);
+
+    // Door face
+    const door = new THREE.Mesh(new THREE.BoxGeometry(doorW, doorH, 0.020), doorMat);
+    door.position.set(cx, 0, doorZ);
+    door.castShadow = true;
+    cab.add(door);
+
+    // Inset panel recess
+    const iW = doorW * 0.70, iH = doorH * 0.70;
+    const inset = new THREE.Mesh(new THREE.BoxGeometry(iW, iH, 0.010), insetMat);
+    inset.position.set(cx, 0, doorZ + 0.008);
+    cab.add(inset);
+
+    // Gold moulding around inset (4 bars)
+    const mk = 0.026, md = 0.013;
+    [
+      [0,  iH / 2 + mk / 2,  iW + mk * 2, mk],
+      [0, -iH / 2 - mk / 2,  iW + mk * 2, mk],
+      [-(iW / 2 + mk / 2), 0, mk, iH],
+      [ (iW / 2 + mk / 2), 0, mk, iH],
+    ].forEach(([ox, oy, mw, mh]) => {
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(mw, mh, md), goldMat);
+      bar.position.set(cx + ox, oy, doorZ + 0.018);
+      cab.add(bar);
+    });
+
+    // Corner rosettes at moulding intersections
+    [[-1,-1],[-1,1],[1,-1],[1,1]].forEach(([rx,ry]) => {
+      const ros = new THREE.Mesh(new THREE.BoxGeometry(mk * 1.4, mk * 1.4, md + 0.004), darkGoldMat);
+      ros.position.set(cx + rx*(iW/2 + mk/2), ry*(iH/2 + mk/2), doorZ + 0.020);
+      cab.add(ros);
+    });
+
+    // Handle bar (horizontal, inner edge of each door)
+    const handleX = cx - side * (doorW * 0.24);
+    const hBar = new THREE.Mesh(new THREE.CylinderGeometry(0.020, 0.020, 0.24, 18), goldMat);
+    hBar.rotation.z = Math.PI / 2;
+    hBar.position.set(handleX, 0, doorZ + 0.042);
+    hBar.castShadow = true;
+    cab.add(hBar);
+
+    // Handle backplate
+    const hPlate = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.055, 0.012), darkGoldMat);
+    hPlate.position.set(handleX, 0, doorZ + 0.026);
+    cab.add(hPlate);
+  });
+
+  // Center gold divider strip
+  const divider = new THREE.Mesh(new THREE.BoxGeometry(0.024, BH * 0.87, 0.024), goldMat);
+  divider.position.set(0, 0, BD / 2 + 0.024);
+  cab.add(divider);
+
+  // Keyhole ring
+  const keyRing = new THREE.Mesh(new THREE.TorusGeometry(0.036, 0.010, 8, 24), goldMat);
+  keyRing.position.set(0, 0, BD / 2 + 0.030);
+  cab.add(keyRing);
+
+  // Legs
+  [[-1,-1],[-1,1],[1,-1],[1,1]].forEach(([sx,sz]) => {
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.072, 0.20, 0.072), goldMat);
+    leg.position.set(sx*(BW/2-0.065), -BH/2-0.10, sz*(BD/2-0.065));
+    leg.castShadow = true;
+    cab.add(leg);
+    // foot
+    const foot = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.022, 0.10), darkGoldMat);
+    foot.position.set(sx*(BW/2-0.065), -BH/2-0.21, sz*(BD/2-0.065));
+    cab.add(foot);
+  });
+
+  cab.position.set(camX, 0.08, 0);
+  scene.add(cab);
+
+  /* ── SHADOW RECEIVER ── */
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(10, 10),
+    new THREE.ShadowMaterial({ opacity: 0.45 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -BH / 2 - 0.22;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  /* ── LIGHTING ── */
+  // Warm ambient
+  scene.add(new THREE.AmbientLight(0xD4A040, 0.22));
+
+  // Key light (upper-left-front, warm)
+  const key = new THREE.DirectionalLight(0xFFF6E8, 1.9);
+  key.position.set(-2.5, 5, 4);
+  key.castShadow = true;
+  key.shadow.mapSize.setScalar(1024);
+  key.shadow.camera.left   = -3; key.shadow.camera.right = 3;
+  key.shadow.camera.top    =  4; key.shadow.camera.bottom = -4;
+  key.shadow.camera.near   = 0.5; key.shadow.camera.far = 18;
+  scene.add(key);
+
+  // Cool fill (right side)
+  const fill = new THREE.DirectionalLight(0x8090B0, 0.35);
+  fill.position.set(4, 1, 2);
+  scene.add(fill);
+
+  // Gold rim from behind
+  const rim = new THREE.PointLight(0xC9A84C, 3.0, 9);
+  rim.position.set(camX, 1.8, -3.5);
+  scene.add(rim);
+
+  // Soft front glow
+  const front = new THREE.PointLight(0xD4A853, 0.9, 7);
+  front.position.set(camX - 1, 1.5, 4.5);
+  scene.add(front);
+
+  // Floor bounce (warm gold underneath)
+  const bounce = new THREE.PointLight(0xC9A84C, 0.55, 4);
+  bounce.position.set(camX, -BH/2 - 0.5, 1);
+  scene.add(bounce);
+
+  /* ── GOLD DUST PARTICLES ── */
+  const pCount = mobile ? 60 : 130;
+  const pPos   = new Float32Array(pCount * 3);
+  for (let i = 0; i < pCount; i++) {
+    pPos[i*3]   = (Math.random() - 0.5) * 6 + camX;
+    pPos[i*3+1] = (Math.random() - 0.5) * 5;
+    pPos[i*3+2] = (Math.random() - 0.5) * 4;
+  }
+  const pGeo = new THREE.BufferGeometry();
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+  const dust = new THREE.Points(pGeo, new THREE.PointsMaterial({
+    color: 0xC9A84C, size: 0.016, transparent: true, opacity: 0.55, sizeAttenuation: true,
+  }));
+  scene.add(dust);
+
+  /* Hide loader */
+  loader.classList.add('hidden');
+
+  /* ── RESIZE ── */
+  function setSize() {
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    renderer.setSize(w, h, false);
+  }
+  window.addEventListener('resize', () => {
+    setSize();
+    camera.aspect = canvas.clientWidth / canvas.clientHeight;
+    camera.updateProjectionMatrix();
+  });
+
+  /* ── ANIMATE ── */
+  let t = 0;
+  (function tick() {
+    requestAnimationFrame(tick);
+    t += 0.008;
+
+    cab.position.y = 0.08 + Math.sin(t * 0.55) * 0.028; // gentle float
+    dust.rotation.y = t * 0.035;
+    rim.intensity   = 2.8 + Math.sin(t * 0.9) * 0.4;    // rim pulse
+
+    controls.update();
+    renderer.render(scene, camera);
+  })();
+}
+
+function setSize() {
+  /* called before renderer exists — noop here, renderer handles its own resize */
+}
+</script>
+</body>
+</html>
