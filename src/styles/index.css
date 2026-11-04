@@ -32,6 +32,8 @@
   --on-accent: #ffffff;
   --danger: #dc2626;
   --danger-soft: #fee2e2;
+  --chart: #059669;
+  --chart-grid: #e8ebf0;
   color-scheme: light;
 }
 
@@ -48,6 +50,8 @@
   --on-accent: #062a33;
   --danger: #ff7992;
   --danger-soft: rgb(255 121 146 / 0.12);
+  --chart: #1fa889;
+  --chart-grid: #1c2c42;
   color-scheme: dark;
 }
 

@@ -1,15 +1,13 @@
 import { MailCheck } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import { inputClass } from '../../components/fieldStyles';
 import { Logo } from '../../components/Logo';
 import { ThemeToggle } from '../../components/ThemeToggle';
 import { authErrorMessage } from './authErrors';
 import { useAuth } from './AuthProvider';
 
 type Mode = 'signin' | 'signup';
-
-const inputClass =
-  'w-full rounded-xl border border-line bg-surface-2 px-4 py-3 text-base text-ink outline-none transition placeholder:text-muted/70 focus:border-accent focus:ring-2 focus:ring-accent/25';
 
 export function AuthPage() {
   const { client, session } = useAuth();
