@@ -8,3 +8,4 @@ dist-ssr
 coverage
 .DS_Store
 supabase/.temp
+.netlify
