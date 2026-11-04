@@ -1,0 +1,67 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --font-sans: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Outfit', 'DM Sans', system-ui, sans-serif;
+}
+
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --surface-2: #f1f3f6;
+  --line: #e3e7ed;
+  --ink: #0d1b2a;
+  --muted: #5b6b7f;
+  --accent: #059669;
+  --accent-strong: #047857;
+  --accent-soft: #d1fae5;
+  --on-accent: #ffffff;
+  --danger: #dc2626;
+  --danger-soft: #fee2e2;
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #080e1a;
+  --surface: #101a2b;
+  --surface-2: #14203a;
+  --line: #23354b;
+  --ink: #f5f8ff;
+  --muted: #91a2b9;
+  --accent: #50efce;
+  --accent-strong: #36bdf1;
+  --accent-soft: rgb(80 239 206 / 0.12);
+  --on-accent: #062a33;
+  --danger: #ff7992;
+  --danger-soft: rgb(255 121 146 / 0.12);
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dark body {
+  background:
+    radial-gradient(ellipse 90% 48% at 58% -13%, rgb(25 64 100 / 0.5), transparent 70%),
+    var(--bg);
+  background-attachment: fixed;
+}
