@@ -1,4 +1,4 @@
-import { CalendarDays, ChevronRight, FileSpreadsheet, Mic, PenLine } from 'lucide-react';
+import { CalendarDays, ChevronRight, FileSpreadsheet, Landmark, Mic, PenLine } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { RankedBars } from '../components/RankedBars';
 import { Spinner } from '../components/Spinner';
@@ -191,6 +191,20 @@ export function DashboardPage() {
           </div>
         </section>
       )}
+
+      <Link
+        to="/padanan"
+        className="flex items-center gap-4 rounded-2xl border border-line bg-surface p-4 transition hover:border-accent"
+      >
+        <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent">
+          <Landmark className="size-5" aria-hidden />
+        </span>
+        <span className="flex-1">
+          <span className="block font-display font-semibold">Padanan Bank</span>
+          <span className="block text-sm text-muted">Padankan statement bank dengan rekod anda</span>
+        </span>
+        <ChevronRight className="size-5 text-muted" aria-hidden />
+      </Link>
 
       <a
         href="/pnl/index.html"

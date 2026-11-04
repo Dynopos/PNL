@@ -45,7 +45,8 @@ for f in "$ROOT"/supabase/migrations/*.sql; do "${PSQL[@]}" -f "$f"; done
   ('aaaaaaaa-0000-0000-0000-000000000001', 'ali@example.test', '{\"display_name\":\"Ali\"}'),
   ('bbbbbbbb-0000-0000-0000-000000000002', 'bee@example.test', '{}'),
   ('cccccccc-0000-0000-0000-000000000003', 'cara@example.test', '{}'),
-  ('dddddddd-0000-0000-0000-000000000004', 'dan@example.test', '{}');"
+  ('dddddddd-0000-0000-0000-000000000004', 'dan@example.test', '{}'),
+  ('eeeeeeee-0000-0000-0000-000000000005', 'eva@example.test', '{}');"
 
 PGRST_DB_URI="postgres://authenticator@localhost:$PG_PORT/postgres" \
 PGRST_DB_SCHEMAS=public \

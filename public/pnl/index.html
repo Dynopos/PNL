@@ -460,9 +460,9 @@ async function extractText(file){
     let cur=[],cy=null;
     for(const it of items){
       if(cy===null||Math.abs(it.y-cy)<=2){cur.push(it); if(cy===null)cy=it.y;}
-      else{out.push(cur.map(i=>i.s).join(' '));cur=[it];cy=it.y;}
+      else{out.push(cur.map(i=>i.s).join(' ').replace(/\s+/g,' ').trim());cur=[it];cy=it.y;}
     }
-    if(cur.length)out.push(cur.map(i=>i.s).join(' '));
+    if(cur.length)out.push(cur.map(i=>i.s).join(' ').replace(/\s+/g,' ').trim());
   }
   return out.join('\n');
 }
