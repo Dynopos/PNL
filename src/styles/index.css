@@ -13,45 +13,54 @@
   --color-accent-strong: var(--accent-strong);
   --color-accent-soft: var(--accent-soft);
   --color-on-accent: var(--on-accent);
+  --color-brand-red: var(--brand-red);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
   --font-sans: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-display: 'Outfit', 'DM Sans', system-ui, sans-serif;
 }
 
+/* VAPRO: electric blue + racing red + chrome, from the logo. */
 :root {
-  --bg: #f6f7f9;
+  --bg: #f3f4f6;
   --surface: #ffffff;
-  --surface-2: #f1f3f6;
-  --line: #e3e7ed;
-  --ink: #0d1b2a;
-  --muted: #5b6b7f;
-  --accent: #059669;
-  --accent-strong: #047857;
-  --accent-soft: #d1fae5;
+  --surface-2: #eef0f3;
+  --line: #dfe2e7;
+  --ink: #0b0d12;
+  --muted: #5a6170;
+  --accent: #1d4ed8;
+  --accent-strong: #1e40af;
+  --accent-soft: #e3eaff;
   --on-accent: #ffffff;
+  --brand-red: #e11d2e;
   --danger: #dc2626;
   --danger-soft: #fee2e2;
-  --chart: #059669;
-  --chart-grid: #e8ebf0;
+  --chart: #2563eb;
+  --chart-grid: #e6e8ec;
+  --brand-gradient: linear-gradient(90deg, #e11d2e 0%, #b0278f 45%, #1d4ed8 100%);
+  --chrome: linear-gradient(180deg, #ffffff 0%, #e4e7ec 42%, #9ba2ad 52%, #d5d9df 70%, #f4f5f7 100%);
+  --mic-glow: rgb(29 78 216 / 0.14);
   color-scheme: light;
 }
 
 .dark {
-  --bg: #080e1a;
-  --surface: #101a2b;
-  --surface-2: #14203a;
-  --line: #23354b;
-  --ink: #f5f8ff;
-  --muted: #91a2b9;
-  --accent: #50efce;
-  --accent-strong: #36bdf1;
-  --accent-soft: rgb(80 239 206 / 0.12);
-  --on-accent: #062a33;
-  --danger: #ff7992;
-  --danger-soft: rgb(255 121 146 / 0.12);
-  --chart: #1fa889;
-  --chart-grid: #1c2c42;
+  --bg: #07080b;
+  --surface: #121419;
+  --surface-2: #1a1d24;
+  --line: #2a2e37;
+  --ink: #f2f4f8;
+  --muted: #9aa1ad;
+  --accent: #4f8bff;
+  --accent-strong: #7aa7ff;
+  --accent-soft: rgb(79 139 255 / 0.14);
+  --on-accent: #ffffff;
+  --brand-red: #ff3344;
+  --danger: #ff4d5e;
+  --danger-soft: rgb(255 77 94 / 0.13);
+  --chart: #3b6cf6;
+  --chart-grid: #20242c;
+  --brand-gradient: linear-gradient(90deg, #ff3344 0%, #c23aa8 45%, #2f6bff 100%);
+  --mic-glow: rgb(79 139 255 / 0.16);
   color-scheme: dark;
 }
 
@@ -65,7 +74,33 @@ body {
 
 .dark body {
   background:
-    radial-gradient(ellipse 90% 48% at 58% -13%, rgb(25 64 100 / 0.5), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 0% -5%, rgb(225 29 46 / 0.16), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 100% -5%, rgb(37 99 235 / 0.2), transparent 70%),
     var(--bg);
   background-attachment: fixed;
+}
+
+@utility brand-stripe {
+  background: var(--brand-gradient);
+}
+
+/* Red→blue body with a chrome rim, like the logo badge. */
+@utility mic-brand {
+  color: #fff;
+  background: linear-gradient(135deg, #ff2a3d 0%, #e11d2e 30%, #8b2bb8 50%, #1d4ed8 70%, #2f6bff 100%);
+  box-shadow:
+    0 0 0 3px #d5d9df,
+    0 0 0 4px #8d95a1,
+    0 0 0 14px var(--mic-glow),
+    0 18px 40px -12px rgb(29 78 216 / 0.55);
+}
+
+/* Polished-metal text for headline numbers on dark; plain ink on light for contrast. */
+@utility chrome-text {
+  .dark & {
+    background: var(--chrome);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
 }

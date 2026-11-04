@@ -87,7 +87,12 @@ export function AuthPage() {
             </button>
           </div>
         ) : (
-          <form onSubmit={onSubmit} className="mt-8 rounded-2xl border border-line bg-surface p-5 shadow-sm" noValidate>
+          <form
+            onSubmit={onSubmit}
+            className="relative mt-8 overflow-hidden rounded-2xl border border-line bg-surface p-5 pt-6 shadow-sm"
+            noValidate
+          >
+            <span className="brand-stripe absolute inset-x-0 top-0 h-1" aria-hidden />
             <div role="tablist" className="grid grid-cols-2 rounded-xl bg-surface-2 p-1 text-sm font-semibold">
               {(['signin', 'signup'] as const).map((m) => (
                 <button

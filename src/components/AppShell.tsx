@@ -14,11 +14,12 @@ const NAV = [
 export function AppShell() {
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-xl flex-col">
-      <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-line/60 bg-bg/85 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-md">
+      <header className="sticky top-0 z-20 flex items-center justify-between gap-3 bg-bg/85 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-md">
         <NavLink to="/" aria-label="VAPRO DuitVoice — Utama">
           <Logo className="h-9 w-auto" />
         </NavLink>
         <ThemeToggle />
+        <span className="brand-stripe absolute inset-x-0 bottom-0 h-0.5" aria-hidden />
       </header>
 
       <main className="flex-1 px-4 pb-32 pt-5">
@@ -38,7 +39,7 @@ export function AppShell() {
                   <NavLink
                     to={item.to}
                     aria-label="Rekod belanja dengan suara"
-                    className="-mt-8 grid size-16 place-items-center rounded-full bg-accent text-on-accent shadow-lg shadow-accent/30 ring-4 ring-bg transition active:scale-95"
+                    className="mic-brand -mt-8 grid size-16 place-items-center rounded-full transition active:scale-95"
                   >
                     <Icon className="size-7" aria-hidden />
                   </NavLink>

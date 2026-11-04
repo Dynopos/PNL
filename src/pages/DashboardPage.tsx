@@ -43,7 +43,12 @@ export function DashboardPage() {
         </h1>
       </section>
 
-      <section className={card} aria-label="Ringkasan belanja" aria-busy={summary.loading}>
+      <section
+        className={`${card} relative overflow-hidden`}
+        aria-label="Ringkasan belanja"
+        aria-busy={summary.loading}
+      >
+        <span className="brand-stripe absolute inset-x-0 top-0 h-1" aria-hidden />
         {summary.error ? (
           <p role="alert" className="text-sm text-danger">
             {friendlyError(summary.error)}
@@ -55,7 +60,7 @@ export function DashboardPage() {
         ) : (
           <>
             <p className="text-sm font-medium text-muted">Belanja hari ini</p>
-            <p className="mt-1 font-display text-4xl font-bold tracking-tight tabular-nums">{formatMYR(s.today_total)}</p>
+            <p className="chrome-text mt-1 font-display text-4xl font-bold tracking-tight tabular-nums">{formatMYR(s.today_total)}</p>
             <p className="mt-1 text-sm text-muted">{s.today_count} transaksi</p>
 
             <div className="mt-5 grid grid-cols-2 gap-4 border-t border-line pt-4">
@@ -106,7 +111,7 @@ export function DashboardPage() {
         <Link
           to="/rekod"
           aria-label="Tekan untuk rekod belanja dengan suara"
-          className="grid size-24 place-items-center rounded-full bg-accent text-on-accent shadow-[0_0_0_12px_var(--accent-soft),0_18px_40px_-12px_var(--accent)] transition active:scale-95"
+          className="mic-brand grid size-24 place-items-center rounded-full transition active:scale-95"
         >
           <Mic className="size-10" aria-hidden />
         </Link>
