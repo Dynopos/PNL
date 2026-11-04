@@ -126,7 +126,7 @@ export function DashboardPage() {
 
       <section className="flex flex-col items-center rounded-3xl border border-line bg-surface px-6 py-7 text-center">
         <Link
-          to="/rekod"
+          to="/rekod?mula=1"
           aria-label="Tekan untuk rekod transaksi dengan suara"
           className="mic-brand grid size-24 place-items-center rounded-full transition active:scale-95"
         >

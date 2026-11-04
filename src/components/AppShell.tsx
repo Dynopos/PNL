@@ -6,7 +6,7 @@ import { ThemeToggle } from './ThemeToggle';
 const NAV = [
   { to: '/', label: 'Utama', icon: Home, end: true },
   { to: '/transaksi', label: 'Transaksi', icon: ListOrdered },
-  { to: '/rekod', label: 'Rekod', icon: Mic, primary: true },
+  { to: '/rekod?mula=1', label: 'Rekod', icon: Mic, primary: true },
   { to: '/laporan', label: 'Laporan', icon: BarChart3 },
   { to: '/tetapan', label: 'Tetapan', icon: Settings },
 ] as const;

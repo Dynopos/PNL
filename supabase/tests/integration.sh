@@ -43,7 +43,9 @@ PSQL=(psql -h "$WORK" -p "$PG_PORT" -U postgres -d postgres -v ON_ERROR_STOP=1 -
 for f in "$ROOT"/supabase/migrations/*.sql; do "${PSQL[@]}" -f "$f"; done
 "${PSQL[@]}" -c "insert into auth.users (id, email, raw_user_meta_data) values
   ('aaaaaaaa-0000-0000-0000-000000000001', 'ali@example.test', '{\"display_name\":\"Ali\"}'),
-  ('bbbbbbbb-0000-0000-0000-000000000002', 'bee@example.test', '{}');"
+  ('bbbbbbbb-0000-0000-0000-000000000002', 'bee@example.test', '{}'),
+  ('cccccccc-0000-0000-0000-000000000003', 'cara@example.test', '{}'),
+  ('dddddddd-0000-0000-0000-000000000004', 'dan@example.test', '{}');"
 
 PGRST_DB_URI="postgres://authenticator@localhost:$PG_PORT/postgres" \
 PGRST_DB_SCHEMAS=public \

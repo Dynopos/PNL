@@ -11,7 +11,7 @@ import { RequireAuth } from '../features/auth/RequireAuth';
 import { TransactionSheetProvider } from '../features/transactions/TransactionSheet';
 import { DataVersionProvider } from '../lib/data';
 import { DashboardPage } from '../pages/DashboardPage';
-import { VoicePage } from '../pages/PlaceholderPages';
+import { VoicePage } from '../pages/VoicePage';
 import { SettingsPage } from '../pages/SettingsPage';
 import { TransactionsPage } from '../pages/TransactionsPage';
 
