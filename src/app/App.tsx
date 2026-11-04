@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom
 import { AppShell } from '../components/AppShell';
 import { SetupRequired } from '../components/SetupRequired';
 import { Spinner } from '../components/Spinner';
+import { AccountProvider } from '../features/accounts/AccountProvider';
 import { AuthPage } from '../features/auth/AuthPage';
 import { AuthProvider } from '../features/auth/AuthProvider';
 import { RequireAuth } from '../features/auth/RequireAuth';
@@ -19,9 +20,11 @@ const ReportsPage = lazy(() => import('../pages/ReportsPage').then((m) => ({ def
 function SignedInProviders() {
   return (
     <DataVersionProvider>
-      <TransactionSheetProvider>
-        <Outlet />
-      </TransactionSheetProvider>
+      <AccountProvider>
+        <TransactionSheetProvider>
+          <Outlet />
+        </TransactionSheetProvider>
+      </AccountProvider>
     </DataVersionProvider>
   );
 }

@@ -1,6 +1,7 @@
 import { validateDraft, type TransactionDraft } from './validation';
 
 const base: TransactionDraft = {
+  transaction_type: 'expense',
   amount: '55',
   merchant: '  Mydin   Mall ',
   description: '',
@@ -13,6 +14,7 @@ describe('validateDraft', () => {
     expect(validateDraft(base, '2026-11-04')).toEqual({
       ok: true,
       value: {
+        transaction_type: 'expense',
         amount: '55.00',
         merchant: 'Mydin Mall',
         description: null,
@@ -35,6 +37,13 @@ describe('validateDraft', () => {
     );
     expect(r.ok).toBe(false);
     if (!r.ok) expect(Object.keys(r.errors).sort()).toEqual(['amount', 'merchant', 'transaction_date']);
+  });
+
+  it('keeps income and asks for its source', () => {
+    const ok = validateDraft({ ...base, transaction_type: 'income', amount: '1500', merchant: 'Jualan hari ini' }, '2026-11-04');
+    expect(ok.ok && ok.value.transaction_type).toBe('income');
+    const r = validateDraft({ ...base, transaction_type: 'income', merchant: '' }, '2026-11-04');
+    expect(!r.ok && r.errors.merchant).toBe('Isi nama sumber atau keterangan.');
   });
 
   it('treats an empty category as uncategorised', () => {

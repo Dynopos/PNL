@@ -1,11 +1,12 @@
 import { useId, useState, type FormEvent, type ReactNode } from 'react';
 import { inputClass, labelClass, primaryButton } from '../../components/fieldStyles';
-import type { Category } from '../../lib/types';
+import type { Category, EntryType } from '../../lib/types';
 import { validateDraft, type DraftErrors, type TransactionDraft, type TransactionInput } from './validation';
 
 export function TransactionForm({
   initial,
   categories,
+  defaultCategoryFor,
   today,
   submitLabel,
   onSubmit,
@@ -13,6 +14,7 @@ export function TransactionForm({
 }: {
   initial: TransactionDraft;
   categories: Category[];
+  defaultCategoryFor: (type: EntryType) => string;
   today: string;
   submitLabel: string;
   onSubmit: (input: TransactionInput) => Promise<string | null>;
@@ -28,6 +30,12 @@ export function TransactionForm({
     setDraft((d) => ({ ...d, [field]: e.target.value }));
     setErrors((er) => ({ ...er, [field]: undefined }));
   };
+
+  const setType = (type: EntryType) => {
+    setDraft((d) => (d.transaction_type === type ? d : { ...d, transaction_type: type, category_id: defaultCategoryFor(type) }));
+    setErrors((er) => ({ ...er, merchant: undefined }));
+  };
+  const income = draft.transaction_type === 'income';
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -58,6 +66,32 @@ export function TransactionForm({
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-4">
+      <div role="radiogroup" aria-label="Jenis transaksi" className="grid grid-cols-2 rounded-xl bg-surface-2 p-1 text-sm font-semibold">
+        {(
+          [
+            ['expense', 'Perbelanjaan'],
+            ['income', 'Pendapatan'],
+          ] as const
+        ).map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            role="radio"
+            aria-checked={draft.transaction_type === value}
+            onClick={() => setType(value)}
+            className={`min-h-11 rounded-lg transition ${
+              draft.transaction_type === value
+                ? value === 'income'
+                  ? 'bg-accent text-on-accent'
+                  : 'bg-danger text-white'
+                : 'text-muted'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       <div>
         <label htmlFor={`${id}-amount`} className={labelClass}>
           Jumlah (RM)
@@ -76,13 +110,13 @@ export function TransactionForm({
 
       <div>
         <label htmlFor={`${id}-merchant`} className={labelClass}>
-          Kedai / tempat
+          {income ? 'Daripada (sumber)' : 'Kedai / tempat'}
         </label>
         <input
           {...field('merchant')}
           className={inputClass}
           maxLength={120}
-          placeholder="cth: Mydin"
+          placeholder={income ? 'cth: Jualan kedai, Majikan' : 'cth: Mydin'}
           value={draft.merchant}
           onChange={set('merchant')}
         />
@@ -96,7 +130,7 @@ export function TransactionForm({
           </label>
           <select {...field('category_id')} className={inputClass} value={draft.category_id} onChange={set('category_id')}>
             <option value="">Tiada kategori</option>
-            {categories.map((c) => (
+            {categories.filter((c) => c.type === draft.transaction_type).map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
               </option>
@@ -127,7 +161,7 @@ export function TransactionForm({
           {...field('description')}
           className={inputClass}
           maxLength={500}
-          placeholder="cth: Barang dapur mingguan"
+          placeholder={income ? 'cth: Jualan hari ini' : 'cth: Barang dapur mingguan'}
           value={draft.description}
           onChange={set('description')}
         />

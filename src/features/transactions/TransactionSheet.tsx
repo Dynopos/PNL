@@ -4,10 +4,11 @@ import { secondaryButton } from '../../components/fieldStyles';
 import { Sheet } from '../../components/Sheet';
 import { useInvalidate } from '../../lib/data';
 import { dateInKL, formatLongDate, formatMYR } from '../../lib/locale';
-import type { Transaction } from '../../lib/types';
+import type { EntryType, Transaction } from '../../lib/types';
+import { useAccount } from '../accounts/AccountProvider';
 import { useAuth } from '../auth/AuthProvider';
 import { useCategories } from '../categories/useCategories';
-import { createTransaction, deleteTransaction, friendlyError, getDefaultAccountId, updateTransaction } from './api';
+import { createTransaction, deleteTransaction, friendlyError, updateTransaction } from './api';
 import { TransactionForm } from './TransactionForm';
 import type { TransactionDraft, TransactionInput } from './validation';
 
@@ -26,8 +27,18 @@ export function useTransactionSheet() {
 }
 
 function draftFrom(tx: Transaction | null, today: string, defaultCategoryId: string): TransactionDraft {
-  if (!tx) return { amount: '', merchant: '', description: '', category_id: defaultCategoryId, transaction_date: today };
+  if (!tx) {
+    return {
+      transaction_type: 'expense',
+      amount: '',
+      merchant: '',
+      description: '',
+      category_id: defaultCategoryId,
+      transaction_date: today,
+    };
+  }
   return {
+    transaction_type: tx.transaction_type,
     amount: Number(tx.amount).toFixed(2),
     merchant: tx.merchant ?? '',
     description: tx.description ?? '',
@@ -40,12 +51,14 @@ export function TransactionSheetProvider({ children }: { children: ReactNode }) 
   const { client, session } = useAuth();
   const invalidate = useInvalidate();
   const { categories } = useCategories();
+  const { account } = useAccount();
   const [state, setState] = useState<State>({ mode: 'closed' });
   const [toast, setToast] = useState('');
   const [deleteError, setDeleteError] = useState('');
   const [deleting, setDeleting] = useState(false);
   const today = dateInKL();
-  const defaultCategoryId = categories.find((c) => c.name === 'Lain-lain')?.id ?? '';
+  const defaultCategoryFor = (type: EntryType) =>
+    categories.find((c) => c.name === 'Lain-lain' && c.type === type)?.id ?? '';
 
   useEffect(() => {
     if (!toast) return;
@@ -67,9 +80,9 @@ export function TransactionSheetProvider({ children }: { children: ReactNode }) 
   async function save(input: TransactionInput): Promise<string | null> {
     try {
       if (state.mode === 'create') {
-        const accountId = await getDefaultAccountId(client);
-        await createTransaction(client, session!.user.id, accountId, input, state.idempotencyKey);
-        setToast(`Disimpan · ${formatMYR(input.amount)}`);
+        if (!account) return 'Akaun belum sedia. Cuba lagi sebentar.';
+        await createTransaction(client, session!.user.id, account.id, input, state.idempotencyKey);
+        setToast(`${input.transaction_type === 'income' ? 'Pendapatan' : 'Perbelanjaan'} disimpan · ${formatMYR(input.amount)}`);
       } else if (state.mode === 'edit') {
         await updateTransaction(client, state.tx.id, input);
         setToast('Perubahan disimpan');
@@ -98,7 +111,7 @@ export function TransactionSheetProvider({ children }: { children: ReactNode }) 
     }
   }
 
-  const title = state.mode === 'create' ? 'Tambah belanja' : state.mode === 'edit' ? 'Edit transaksi' : 'Padam transaksi?';
+  const title = state.mode === 'create' ? 'Tambah transaksi' : state.mode === 'edit' ? 'Edit transaksi' : 'Padam transaksi?';
 
   return (
     <SheetContext.Provider value={{ openCreate, openEdit }}>
@@ -108,8 +121,9 @@ export function TransactionSheetProvider({ children }: { children: ReactNode }) 
         {(state.mode === 'create' || state.mode === 'edit') && (
           <TransactionForm
             key={state.key}
-            initial={draftFrom(state.mode === 'edit' ? state.tx : null, today, defaultCategoryId)}
+            initial={draftFrom(state.mode === 'edit' ? state.tx : null, today, defaultCategoryFor('expense'))}
             categories={categories}
+            defaultCategoryFor={defaultCategoryFor}
             today={today}
             submitLabel={state.mode === 'create' ? 'Simpan' : 'Simpan perubahan'}
             onSubmit={save}

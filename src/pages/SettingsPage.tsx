@@ -97,7 +97,7 @@ export function SettingsPage() {
       <section className={card}>
         <h2 className="font-display font-semibold">Akan datang</h2>
         <p className="mt-1 text-sm text-muted">
-          Bajet bulanan, urus kategori, tetapan suara, maklumat privasi dan padam akaun (Fasa 4).
+          Urus kategori, tetapan suara, maklumat privasi dan padam akaun (Fasa 4).
         </p>
       </section>
 

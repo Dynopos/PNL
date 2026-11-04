@@ -21,17 +21,28 @@ export interface Transaction {
   created_at: string;
 }
 
-export interface DashboardSummary {
-  today_total: number;
-  today_count: number;
-  month_total: number;
-  month_count: number;
-  month_budget: number | null;
+export type AccountKind = 'personal' | 'business';
+
+export interface Account {
+  id: string;
+  account_name: string;
+  account_type: AccountKind;
 }
 
-export interface PeriodBucket {
+export interface CashflowSummary {
+  income_total: number;
+  expense_total: number;
+  net_cashflow: number;
+  income_count: number;
+  expense_count: number;
+  tx_count: number;
+}
+
+export interface CashflowBucket {
   bucket: string;
-  total: number;
+  income: number;
+  expense: number;
+  net: number;
   tx_count: number;
 }
 

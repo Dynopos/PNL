@@ -3,12 +3,15 @@ import {
   Fuel,
   GraduationCap,
   HeartPulse,
+  HandCoins,
   Home,
   Receipt,
   ShoppingBag,
   ShoppingCart,
+  Store,
   Tag,
   UtensilsCrossed,
+  Wallet,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -22,6 +25,9 @@ const ICONS: Record<string, LucideIcon> = {
   Pendidikan: GraduationCap,
   Hiburan: Clapperboard,
   Shopping: ShoppingBag,
+  Jualan: Store,
+  'Bayaran Pelanggan': HandCoins,
+  Gaji: Wallet,
 };
 
 export function categoryIcon(name: string | null | undefined): LucideIcon {

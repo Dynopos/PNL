@@ -8,7 +8,15 @@ export interface RankedItem {
 }
 
 /** Single-series horizontal bars, already sorted largest first. Identity comes from the text label. */
-export function RankedBars({ items, grandTotal }: { items: RankedItem[]; grandTotal: number }) {
+export function RankedBars({
+  items,
+  grandTotal,
+  color = 'var(--chart)',
+}: {
+  items: RankedItem[];
+  grandTotal: number;
+  color?: string;
+}) {
   const max = Math.max(...items.map((i) => i.total), 0);
   return (
     <ul className="space-y-3.5">
@@ -25,8 +33,8 @@ export function RankedBars({ items, grandTotal }: { items: RankedItem[]; grandTo
             </div>
             <div className="mt-1.5 h-2">
               <div
-                className="h-full rounded-r-[4px] bg-[var(--chart)]"
-                style={{ width: `${max > 0 ? Math.max((item.total / max) * 100, 1.5) : 0}%` }}
+                className="h-full rounded-r-[4px]"
+                style={{ background: color, width: `${max > 0 ? Math.max((item.total / max) * 100, 1.5) : 0}%` }}
               />
             </div>
             {item.detail && <p className="mt-1 text-xs text-muted">{item.detail}</p>}

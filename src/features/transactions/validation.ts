@@ -1,7 +1,9 @@
 import { isValidIsoDate } from '../../lib/dates';
 import { parseAmountInput } from '../../lib/money';
+import type { EntryType } from '../../lib/types';
 
 export interface TransactionDraft {
+  transaction_type: EntryType;
   amount: string;
   merchant: string;
   description: string;
@@ -10,6 +12,7 @@ export interface TransactionDraft {
 }
 
 export interface TransactionInput {
+  transaction_type: EntryType;
   amount: string;
   merchant: string | null;
   description: string | null;
@@ -35,14 +38,16 @@ export function validateDraft(
   else if (draft.transaction_date > today) errors.transaction_date = 'Tarikh tidak boleh melebihi hari ini.';
   else if (draft.transaction_date < '2000-01-01') errors.transaction_date = 'Tarikh terlalu lama.';
 
-  if (!merchant && !description) errors.merchant = 'Isi nama kedai atau keterangan.';
-  if (merchant.length > 120) errors.merchant = 'Nama kedai terlalu panjang (maks 120 aksara).';
+  const who = draft.transaction_type === 'income' ? 'sumber' : 'kedai';
+  if (!merchant && !description) errors.merchant = `Isi nama ${who} atau keterangan.`;
+  if (merchant.length > 120) errors.merchant = `Nama ${who} terlalu panjang (maks 120 aksara).`;
   if (description.length > 500) errors.description = 'Keterangan terlalu panjang (maks 500 aksara).';
 
   if (Object.keys(errors).length > 0 || !amount) return { ok: false, errors };
   return {
     ok: true,
     value: {
+      transaction_type: draft.transaction_type,
       amount,
       merchant: merchant || null,
       description: description || null,

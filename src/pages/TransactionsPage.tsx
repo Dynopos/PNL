@@ -2,6 +2,7 @@ import { Plus, Search, SearchX } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { inputClass } from '../components/fieldStyles';
 import { Spinner } from '../components/Spinner';
+import { useAccount } from '../features/accounts/AccountProvider';
 import { useAuth } from '../features/auth/AuthProvider';
 import { useCategories } from '../features/categories/useCategories';
 import { friendlyError, listTransactions, NO_CATEGORY } from '../features/transactions/api';
@@ -24,6 +25,8 @@ function useDebounced<T>(value: T, ms: number) {
 
 export function TransactionsPage() {
   const { client } = useAuth();
+  const { account, error: accountError } = useAccount();
+  const accountId = account?.id;
   const { categories, byId } = useCategories();
   const { openCreate, openEdit } = useTransactionSheet();
   const today = dateInKL();
@@ -42,16 +45,20 @@ export function TransactionsPage() {
   const setPages = (fn: (p: number) => number) => setPaging({ key: filterKey, pages: fn(pages) });
 
   const { data, error, loading } = useLoad(async () => {
-    const results = await Promise.all(Array.from({ length: pages }, (_, i) => listTransactions(client, filters, i)));
+    if (!accountId) return new Promise<never>(() => {});
+    const results = await Promise.all(
+      Array.from({ length: pages }, (_, i) => listTransactions(client, accountId, filters, i)),
+    );
     return { rows: results.flatMap((r) => r.rows), hasMore: results[results.length - 1]?.hasMore ?? false };
-  }, [client, filterKey, pages]);
+  }, [client, accountId, filterKey, pages]);
 
   const groups = useMemo(() => {
-    const map = new Map<string, { rows: Transaction[]; sen: number }>();
+    const map = new Map<string, { rows: Transaction[]; inSen: number; outSen: number }>();
     for (const tx of data?.rows ?? []) {
-      const g = map.get(tx.transaction_date) ?? { rows: [], sen: 0 };
+      const g = map.get(tx.transaction_date) ?? { rows: [], inSen: 0, outSen: 0 };
       g.rows.push(tx);
-      if (tx.transaction_type === 'expense') g.sen += toSen(tx.amount);
+      if (tx.transaction_type === 'income') g.inSen += toSen(tx.amount);
+      else g.outSen += toSen(tx.amount);
       map.set(tx.transaction_date, g);
     }
     return [...map.entries()];
@@ -132,19 +139,30 @@ export function TransactionsPage() {
           <span className="sr-only">Kategori</span>
           <select className={inputClass} value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
             <option value="">Semua kategori</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
+            {(
+              [
+                ['income', 'Pendapatan'],
+                ['expense', 'Perbelanjaan'],
+              ] as const
+            ).map(([type, label]) => (
+              <optgroup key={type} label={label}>
+                {categories
+                  .filter((c) => c.type === type)
+                  .map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+              </optgroup>
             ))}
             <option value={NO_CATEGORY}>Tiada kategori</option>
           </select>
         </label>
       </div>
 
-      {error ? (
+      {error || accountError ? (
         <p role="alert" className="rounded-xl bg-danger-soft px-4 py-3 text-sm font-medium text-danger">
-          {friendlyError(error)}
+          {accountError || friendlyError(error)}
         </p>
       ) : !data && loading ? (
         <div className="flex justify-center py-12">
@@ -164,7 +182,10 @@ export function TransactionsPage() {
             <section key={date} className="rounded-2xl border border-line bg-surface px-2 py-1">
               <h2 className="flex items-center justify-between px-2 pb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-muted">
                 <span>{date === today ? 'Hari ini' : formatLongDate(date)}</span>
-                <span className="tabular-nums">{formatMYR(fromSen(g.sen))}</span>
+                <span className="flex gap-2 tabular-nums normal-case">
+                  {g.inSen > 0 && <span className="text-accent">+{formatMYR(fromSen(g.inSen))}</span>}
+                  {g.outSen > 0 && <span>−{formatMYR(fromSen(g.outSen))}</span>}
+                </span>
               </h2>
               <ul className="divide-y divide-line/70">
                 {g.rows.map((tx) => (

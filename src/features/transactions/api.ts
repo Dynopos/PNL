@@ -1,10 +1,13 @@
 import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js';
 import type {
+  Account,
+  AccountKind,
+  CashflowBucket,
+  CashflowSummary,
   Category,
   CategoryTotal,
-  DashboardSummary,
+  EntryType,
   MerchantTotal,
-  PeriodBucket,
   Transaction,
 } from '../../lib/types';
 import { buildSearchFilter } from './search';
@@ -30,10 +33,16 @@ function unwrap<T>({ data, error }: { data: T | null; error: PostgrestError | nu
   return data as T;
 }
 
-export async function listTransactions(client: SupabaseClient, filters: TransactionFilters, page = 0) {
+export async function listTransactions(
+  client: SupabaseClient,
+  accountId: string,
+  filters: TransactionFilters,
+  page = 0,
+) {
   let q = client
     .from('transactions')
     .select(TX_COLUMNS)
+    .eq('account_id', accountId)
     .order('transaction_date', { ascending: false })
     .order('created_at', { ascending: false })
     .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE); // one extra row tells us if more exist
@@ -50,9 +59,7 @@ export async function listTransactions(client: SupabaseClient, filters: Transact
 }
 
 export async function listCategories(client: SupabaseClient): Promise<Category[]> {
-  const rows = unwrap(
-    await client.from('categories').select('id, user_id, name, type').eq('type', 'expense'),
-  ) as Category[];
+  const rows = unwrap(await client.from('categories').select('id, user_id, name, type')) as Category[];
   // System defaults keep their curated order; "Lain-lain" stays last.
   return rows.sort((a, b) => {
     const rank = (c: Category) => (c.name === 'Lain-lain' ? 2 : c.user_id ? 1 : 0);
@@ -60,17 +67,25 @@ export async function listCategories(client: SupabaseClient): Promise<Category[]
   });
 }
 
-export async function getDefaultAccountId(client: SupabaseClient): Promise<string> {
-  const rows = unwrap(
-    await client
-      .from('accounts')
-      .select('id')
-      .eq('account_type', 'personal')
-      .order('created_at', { ascending: true })
-      .limit(1),
-  ) as { id: string }[];
-  if (!rows[0]) throw new Error('No personal account');
-  return rows[0].id;
+const ACCOUNT_COLUMNS = 'id, account_name, account_type';
+const ACCOUNT_NAMES: Record<AccountKind, string> = { personal: 'Peribadi', business: 'Bisnes' };
+
+/** Returns the user's account of this kind, creating it on first use (one per kind). */
+export async function ensureAccount(client: SupabaseClient, userId: string, kind: AccountKind): Promise<Account> {
+  const find = async () =>
+    (unwrap(await client.from('accounts').select(ACCOUNT_COLUMNS).eq('account_type', kind).limit(1)) as Account[])[0];
+  const existing = await find();
+  if (existing) return existing;
+  const { error } = await client
+    .from('accounts')
+    .upsert(
+      { user_id: userId, account_name: ACCOUNT_NAMES[kind], account_type: kind },
+      { onConflict: 'user_id,account_type', ignoreDuplicates: true },
+    );
+  if (error) throw error;
+  const created = await find();
+  if (!created) throw new Error(`Could not open ${kind} account`);
+  return created;
 }
 
 export async function createTransaction(
@@ -85,7 +100,6 @@ export async function createTransaction(
     user_id: userId,
     account_id: accountId,
     currency: 'MYR',
-    transaction_type: 'expense',
     source: 'manual',
     idempotency_key: idempotencyKey,
   });
@@ -101,31 +115,54 @@ export async function deleteTransaction(client: SupabaseClient, id: string) {
   unwrap(await client.from('transactions').delete().eq('id', id).select('id').single());
 }
 
-export async function getDashboardSummary(client: SupabaseClient, today: string): Promise<DashboardSummary> {
-  const rows = unwrap(await client.rpc('dashboard_summary', { p_today: today })) as DashboardSummary[];
-  return rows[0] ?? { today_total: 0, today_count: 0, month_total: 0, month_count: 0, month_budget: null };
+export async function getCashflowSummary(
+  client: SupabaseClient,
+  accountId: string,
+  from: string,
+  to: string,
+): Promise<CashflowSummary> {
+  const rows = unwrap(
+    await client.rpc('cashflow_summary', { p_account_id: accountId, p_from: from, p_to: to }),
+  ) as CashflowSummary[];
+  return (
+    rows[0] ?? { income_total: 0, expense_total: 0, net_cashflow: 0, income_count: 0, expense_count: 0, tx_count: 0 }
+  );
 }
 
-export async function getSpendingByPeriod(
+export async function getCashflowByPeriod(
   client: SupabaseClient,
+  accountId: string,
   from: string,
   to: string,
   bucket: 'day' | 'week' | 'month',
-): Promise<PeriodBucket[]> {
-  return unwrap(await client.rpc('spending_by_period', { p_from: from, p_to: to, p_bucket: bucket }));
+): Promise<CashflowBucket[]> {
+  return unwrap(
+    await client.rpc('cashflow_by_period', { p_account_id: accountId, p_from: from, p_to: to, p_bucket: bucket }),
+  );
 }
 
-export async function getSpendingByCategory(client: SupabaseClient, from: string, to: string): Promise<CategoryTotal[]> {
-  return unwrap(await client.rpc('spending_by_category', { p_from: from, p_to: to }));
+export async function getTotalsByCategory(
+  client: SupabaseClient,
+  accountId: string,
+  from: string,
+  to: string,
+  type: EntryType,
+): Promise<CategoryTotal[]> {
+  return unwrap(
+    await client.rpc('totals_by_category', { p_account_id: accountId, p_from: from, p_to: to, p_type: type }),
+  );
 }
 
 export async function getTopMerchants(
   client: SupabaseClient,
+  accountId: string,
   from: string,
   to: string,
   limit = 5,
 ): Promise<MerchantTotal[]> {
-  return unwrap(await client.rpc('top_merchants', { p_from: from, p_to: to, p_limit: limit }));
+  return unwrap(
+    await client.rpc('top_merchants', { p_account_id: accountId, p_from: from, p_to: to, p_limit: limit }),
+  );
 }
 
 export function friendlyError(err: unknown): string {

@@ -2,34 +2,51 @@ import { CalendarDays, ChevronRight, FileSpreadsheet, Mic, PenLine } from 'lucid
 import { Link } from 'react-router-dom';
 import { RankedBars } from '../components/RankedBars';
 import { Spinner } from '../components/Spinner';
+import { useState } from 'react';
+import { useAccount } from '../features/accounts/AccountProvider';
 import { useAuth } from '../features/auth/AuthProvider';
 import { useCategories } from '../features/categories/useCategories';
 import { useProfile } from '../features/profile/useProfile';
-import { friendlyError, getDashboardSummary, getSpendingByCategory, listTransactions } from '../features/transactions/api';
+import { friendlyError, getCashflowSummary, getTotalsByCategory, listTransactions } from '../features/transactions/api';
 import { TransactionRow } from '../features/transactions/TransactionRow';
 import { useTransactionSheet } from '../features/transactions/TransactionSheet';
 import { useLoad } from '../lib/data';
-import { startOfMonth } from '../lib/dates';
+import { startOfMonth, startOfWeek } from '../lib/dates';
 import { dateInKL, formatLongDate, formatMYR } from '../lib/locale';
 
 const card = 'rounded-2xl border border-line bg-surface p-5';
+
+type DashboardPeriod = 'day' | 'week' | 'month';
+const DASHBOARD_PERIODS: { value: DashboardPeriod; label: string }[] = [
+  { value: 'day', label: 'Hari ini' },
+  { value: 'week', label: 'Minggu ini' },
+  { value: 'month', label: 'Bulan ini' },
+];
 
 export function DashboardPage() {
   const { client } = useAuth();
   const { profile } = useProfile();
   const { byId } = useCategories();
   const { openCreate, openEdit } = useTransactionSheet();
+  const { account, error: accountError } = useAccount();
+  const accountId = account?.id;
   const today = dateInKL();
+  const [period, setPeriod] = useState<DashboardPeriod>('month');
+  const from = period === 'day' ? today : period === 'week' ? startOfWeek(today) : startOfMonth(today);
+  const periodLabel = DASHBOARD_PERIODS.find((p) => p.value === period)!.label.toLowerCase();
 
-  const summary = useLoad(() => getDashboardSummary(client, today), [client, today]);
-  const recent = useLoad(() => listTransactions(client, {}, 0), [client]);
-  const byCategory = useLoad(() => getSpendingByCategory(client, startOfMonth(today), today), [client, today]);
+  const pending = () => new Promise<never>(() => {});
+  const summary = useLoad(
+    () => (accountId ? getCashflowSummary(client, accountId, from, today) : pending()),
+    [client, accountId, from, today],
+  );
+  const recent = useLoad(() => (accountId ? listTransactions(client, accountId, {}, 0) : pending()), [client, accountId]);
+  const byCategory = useLoad(
+    () => (accountId ? getTotalsByCategory(client, accountId, from, today, 'expense') : pending()),
+    [client, accountId, from, today],
+  );
 
-  const s = summary.data;
-  const budget = s?.month_budget ?? null;
-  const remaining = budget !== null && s ? budget - s.month_total : null;
-  const usedPct = budget && s ? Math.min((s.month_total / budget) * 100, 100) : 0;
-  const monthName = new Intl.DateTimeFormat('ms-MY', { month: 'long' }).format(new Date(`${today}T00:00:00`));
+  const s = accountId ? summary.data : null;
 
   return (
     <div className="space-y-5">
@@ -45,78 +62,73 @@ export function DashboardPage() {
 
       <section
         className={`${card} relative overflow-hidden`}
-        aria-label="Ringkasan belanja"
+        aria-label="Ringkasan pendapatan dan perbelanjaan"
         aria-busy={summary.loading}
       >
         <span className="brand-stripe absolute inset-x-0 top-0 h-1" aria-hidden />
-        {summary.error ? (
-          <p role="alert" className="text-sm text-danger">
-            {friendlyError(summary.error)}
+        <div role="tablist" aria-label="Tempoh" className="grid grid-cols-3 rounded-xl bg-surface-2 p-1 text-sm font-semibold">
+          {DASHBOARD_PERIODS.map((p) => (
+            <button
+              key={p.value}
+              type="button"
+              role="tab"
+              aria-selected={period === p.value}
+              onClick={() => setPeriod(p.value)}
+              className={`min-h-10 rounded-lg transition ${period === p.value ? 'bg-surface text-ink shadow-sm' : 'text-muted'}`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+        {summary.error || accountError ? (
+          <p role="alert" className="mt-4 text-sm text-danger">
+            {accountError || friendlyError(summary.error)}
           </p>
         ) : !s ? (
-          <div className="flex justify-center py-6">
+          <div className="flex justify-center py-10">
             <Spinner />
           </div>
         ) : (
-          <>
-            <p className="text-sm font-medium text-muted">Belanja hari ini</p>
-            <p className="chrome-text mt-1 font-display text-4xl font-bold tracking-tight tabular-nums">{formatMYR(s.today_total)}</p>
-            <p className="mt-1 text-sm text-muted">{s.today_count} transaksi</p>
-
-            <div className="mt-5 grid grid-cols-2 gap-4 border-t border-line pt-4">
-              <div>
-                <p className="text-xs font-medium text-muted">Bulan {monthName}</p>
-                <p className="mt-1 font-display text-xl font-semibold tabular-nums">{formatMYR(s.month_total)}</p>
-                <p className="text-xs text-muted">{s.month_count} transaksi</p>
-              </div>
-              <div>
-                <p className="text-xs font-medium text-muted">Baki bajet</p>
-                {remaining === null ? (
-                  <p className="mt-1 text-sm text-muted">Belum ditetapkan</p>
-                ) : (
-                  <>
-                    <p
-                      className={`mt-1 font-display text-xl font-semibold tabular-nums ${remaining < 0 ? 'text-danger' : ''}`}
-                    >
-                      {remaining < 0 ? '−' : ''}
-                      {formatMYR(Math.abs(remaining))}
-                    </p>
-                    <p className="text-xs text-muted">
-                      {remaining < 0 ? 'Melebihi bajet' : `daripada ${formatMYR(budget!)}`}
-                    </p>
-                  </>
-                )}
-              </div>
+          <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-5">
+            <div>
+              <p className="text-xs font-medium text-muted">Jumlah Pendapatan</p>
+              <p className="mt-1 font-display text-xl font-semibold tabular-nums text-accent">{formatMYR(s.income_total)}</p>
+              <p className="text-xs text-muted">Wang diterima</p>
             </div>
-            {budget !== null && (
-              <div
-                className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-2"
-                role="meter"
-                aria-label="Bajet digunakan"
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={Math.round(usedPct)}
-              >
-                <div
-                  className={`h-full rounded-full ${remaining !== null && remaining < 0 ? 'bg-danger' : 'bg-accent'}`}
-                  style={{ width: `${usedPct}%` }}
-                />
-              </div>
-            )}
-          </>
+            <div>
+              <p className="text-xs font-medium text-muted">Jumlah Perbelanjaan</p>
+              <p className="mt-1 font-display text-xl font-semibold tabular-nums text-danger">{formatMYR(s.expense_total)}</p>
+              <p className="text-xs text-muted">Wang dibelanjakan</p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-muted">Aliran Tunai Bersih</p>
+              <p className="chrome-text mt-1 font-display text-2xl font-bold tracking-tight tabular-nums">
+                {s.net_cashflow < 0 ? '−' : ''}
+                {formatMYR(Math.abs(s.net_cashflow))}
+              </p>
+              <p className="text-xs text-muted">{s.net_cashflow < 0 ? 'Defisit' : 'Pendapatan − perbelanjaan'}</p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-muted">Jumlah Transaksi</p>
+              <p className="mt-1 font-display text-2xl font-bold tabular-nums">{s.tx_count}</p>
+              <p className="text-xs text-muted">
+                {s.income_count} masuk · {s.expense_count} keluar
+              </p>
+            </div>
+          </div>
         )}
       </section>
 
       <section className="flex flex-col items-center rounded-3xl border border-line bg-surface px-6 py-7 text-center">
         <Link
           to="/rekod"
-          aria-label="Tekan untuk rekod belanja dengan suara"
+          aria-label="Tekan untuk rekod transaksi dengan suara"
           className="mic-brand grid size-24 place-items-center rounded-full transition active:scale-95"
         >
           <Mic className="size-10" aria-hidden />
         </Link>
-        <p className="mt-5 font-display text-lg font-semibold">Tekan untuk rekod belanja</p>
-        <p className="mt-1 text-sm text-muted">“Mydin lima puluh lima ringgit”</p>
+        <p className="mt-5 font-display text-lg font-semibold">Tekan untuk rekod transaksi</p>
+        <p className="mt-1 text-sm text-muted">“Mydin 55 ringgit” · “Jualan hari ini 1500 ringgit”</p>
         <button
           type="button"
           onClick={openCreate}
@@ -141,7 +153,7 @@ export function DashboardPage() {
             <Spinner />
           </div>
         ) : recent.data.rows.length === 0 ? (
-          <p className="py-4 text-sm text-muted">Belum ada transaksi. Rekod belanja pertama anda di atas.</p>
+          <p className="py-4 text-sm text-muted">Belum ada transaksi. Rekod transaksi pertama anda di atas.</p>
         ) : (
           <ul className="-mx-2 mt-1 divide-y divide-line/70">
             {recent.data.rows.slice(0, 5).map((tx) => (
@@ -156,13 +168,14 @@ export function DashboardPage() {
       {byCategory.data && byCategory.data.length > 0 && (
         <section className={card}>
           <div className="flex items-center justify-between">
-            <h2 className="font-display font-semibold">Ikut kategori · {monthName}</h2>
+            <h2 className="font-display font-semibold">Perbelanjaan ikut kategori · {periodLabel}</h2>
             <Link to="/laporan" className="flex min-h-11 items-center text-sm font-semibold text-accent">
               Laporan
             </Link>
           </div>
           <div className="mt-3">
             <RankedBars
+              color="var(--chart-expense)"
               grandTotal={byCategory.data.reduce((sum, c) => sum + c.total, 0)}
               items={byCategory.data.slice(0, 5).map((c) => ({
                 key: c.category_id ?? 'none',

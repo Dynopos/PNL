@@ -36,6 +36,8 @@
   --danger: #dc2626;
   --danger-soft: #fee2e2;
   --chart: #2563eb;
+  --chart-income: #2563eb;
+  --chart-expense: #dc2626;
   --chart-grid: #e6e8ec;
   --brand-gradient: linear-gradient(90deg, #e11d2e 0%, #b0278f 45%, #1d4ed8 100%);
   --chrome: linear-gradient(180deg, #ffffff 0%, #e4e7ec 42%, #9ba2ad 52%, #d5d9df 70%, #f4f5f7 100%);
@@ -58,6 +60,8 @@
   --danger: #ff4d5e;
   --danger-soft: rgb(255 77 94 / 0.13);
   --chart: #3b6cf6;
+  --chart-income: #3b6cf6;
+  --chart-expense: #e5404f;
   --chart-grid: #20242c;
   --brand-gradient: linear-gradient(90deg, #ff3344 0%, #c23aa8 45%, #2f6bff 100%);
   --mic-glow: rgb(79 139 255 / 0.16);
