@@ -30,8 +30,8 @@ begin
   raise exception 'FAIL %: statement was accepted', p_label;
 end $$;
 
--- A opens a Business account alongside the Personal one; a second Business account is refused.
-insert into public.accounts (user_id, account_name, account_type) values (auth.uid(), 'Bisnes', 'business');
+-- Signup gives A a Business book; a second account (legacy Personal kind) checks the functions keep books apart.
+insert into public.accounts (user_id, account_name, account_type) values (auth.uid(), 'Peribadi', 'personal');
 select pg_temp.expect_error(
   $q$insert into public.accounts (user_id, account_name, account_type) values (auth.uid(), 'Bisnes 2', 'business')$q$,
   array['23505'], 'second business account');

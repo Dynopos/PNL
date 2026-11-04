@@ -71,7 +71,8 @@ describe.skipIf(!URL)('data layer against PostgREST', () => {
     expect(business).not.toBe(personal);
 
     const categories = await listCategories(ali);
-    expect(categories.filter((c) => c.type === 'expense')).toHaveLength(10);
+    expect(categories.filter((c) => c.type === 'expense')).toHaveLength(11);
+    expect(categories.some((c) => c.name === 'Kegunaan Peribadi Pemilik' && c.type === 'expense')).toBe(true);
     expect(categories.filter((c) => c.type === 'income').map((c) => c.name).sort()).toEqual([
       'Bayaran Pelanggan',
       'Gaji',

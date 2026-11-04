@@ -16,6 +16,8 @@ import { dateInKL, formatLongDate, formatMYR } from '../lib/locale';
 
 const card = 'rounded-2xl border border-line bg-surface p-5';
 
+const OWNER_USE = 'Kegunaan Peribadi Pemilik';
+
 type DashboardPeriod = 'day' | 'week' | 'month';
 const DASHBOARD_PERIODS: { value: DashboardPeriod; label: string }[] = [
   { value: 'day', label: 'Hari ini' },
@@ -47,6 +49,7 @@ export function DashboardPage() {
   );
 
   const s = accountId ? summary.data : null;
+  const ownerUse = byCategory.data?.find((c) => c.category_name === OWNER_USE)?.total ?? 0;
 
   return (
     <div className="space-y-5">
@@ -98,7 +101,9 @@ export function DashboardPage() {
             <div>
               <p className="text-xs font-medium text-muted">Jumlah Perbelanjaan</p>
               <p className="mt-1 font-display text-xl font-semibold tabular-nums text-danger">{formatMYR(s.expense_total)}</p>
-              <p className="text-xs text-muted">Wang dibelanjakan</p>
+              <p className="text-xs text-muted">
+                {ownerUse > 0 ? `Termasuk ${formatMYR(ownerUse)} kegunaan peribadi` : 'Wang dibelanjakan'}
+              </p>
             </div>
             <div>
               <p className="text-xs font-medium text-muted">Aliran Tunai Bersih</p>

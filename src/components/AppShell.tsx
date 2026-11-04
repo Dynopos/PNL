@@ -1,7 +1,5 @@
 import { BarChart3, Home, ListOrdered, Mic, Settings } from 'lucide-react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { useAccount } from '../features/accounts/AccountProvider';
-import { AccountSwitch } from '../features/accounts/AccountSwitch';
 import { Logo } from './Logo';
 import { ThemeToggle } from './ThemeToggle';
 
@@ -14,22 +12,17 @@ const NAV = [
 ] as const;
 
 export function AppShell() {
-  const { kind } = useAccount();
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-xl flex-col">
       <header className="sticky top-0 z-20 flex items-center justify-between gap-3 bg-bg/85 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-md">
         <NavLink to="/" aria-label="VAPRO DuitVoice — Utama" className="shrink-0">
           <Logo className="h-9 w-auto" />
         </NavLink>
-        <div className="flex items-center gap-2">
-          <AccountSwitch />
-          <ThemeToggle />
-        </div>
+        <ThemeToggle />
         <span className="brand-stripe absolute inset-x-0 bottom-0 h-0.5" aria-hidden />
       </header>
 
-      {/* Remount per account so nothing from the other book is shown while loading. */}
-      <main key={kind} className="flex-1 px-4 pb-32 pt-5">
+      <main className="flex-1 px-4 pb-32 pt-5">
         <Outlet />
       </main>
 
