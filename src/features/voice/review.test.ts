@@ -1,6 +1,6 @@
 import { parseWithRules } from '../../../supabase/functions/_shared/voiceParser.ts';
 import type { Category } from '../../lib/types';
-import { canAutoSave, toReviewItems, validateReviewItem } from './review';
+import { applyChosenDate, canAutoSave, toReviewItems, validateReviewItem } from './review';
 
 const TODAY = '2026-11-04';
 const categories: Category[] = [
@@ -79,5 +79,18 @@ describe('validateReviewItem and auto-save', () => {
     const r = validateReviewItem(i!, TODAY);
     expect(r.ok).toBe(false);
     if (!r.ok) expect(Object.keys(r.errors).sort()).toEqual(['amount', 'type']);
+  });
+});
+
+describe('applyChosenDate', () => {
+  it('moves undated entries to the chosen date and keeps spoken dates', () => {
+    const parsed = parseWithRules('Mydin 55, semalam Petronas 60', TODAY);
+    expect(parsed.map((c) => c.transaction_date)).toEqual([TODAY, '2026-11-03']);
+    expect(applyChosenDate(parsed, TODAY, '2026-11-01').map((c) => c.transaction_date)).toEqual(['2026-11-01', '2026-11-03']);
+  });
+
+  it('changes nothing when the chosen date is today', () => {
+    const parsed = parseWithRules('Mydin 55', TODAY);
+    expect(applyChosenDate(parsed, TODAY, TODAY)).toBe(parsed);
   });
 });

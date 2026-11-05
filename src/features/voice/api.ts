@@ -11,6 +11,8 @@ const PARSE_FUNCTION = import.meta.env.VITE_PARSE_VOICE_FUNCTION?.trim() || 'par
 export interface ParseOutcome {
   transactions: VoiceCandidate[];
   source: ParseSource;
+  /** The calendar day the parser treated as today (dates it filled in, rather than heard). */
+  today?: string;
 }
 
 /** Server parse (AI with rule fallback); if the function is unreachable, parse on the device. */
@@ -18,9 +20,14 @@ export async function parseTranscript(client: SupabaseClient, transcript: string
   try {
     const { data, error } = await client.functions.invoke(PARSE_FUNCTION, { body: { transcript } });
     if (error || !Array.isArray(data?.transactions)) throw error ?? new Error('Unexpected response');
-    return { transactions: data.transactions as VoiceCandidate[], source: data.source === 'ai' ? 'ai' : 'rules' };
+    return {
+      transactions: data.transactions as VoiceCandidate[],
+      source: data.source === 'ai' ? 'ai' : 'rules',
+      today: typeof data.today === 'string' ? data.today : undefined,
+    };
   } catch {
-    return { transactions: parseWithRules(transcript, dateInKL()), source: 'local' };
+    const today = dateInKL();
+    return { transactions: parseWithRules(transcript, today), source: 'local', today };
   }
 }
 

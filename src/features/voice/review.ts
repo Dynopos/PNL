@@ -123,3 +123,12 @@ export function validateReviewItem(
 export function canAutoSave(items: ReviewItem[], today: string): boolean {
   return items.length === 1 && items[0]!.issues.length === 0 && validateReviewItem(items[0]!, today).ok;
 }
+
+/**
+ * Puts entries the speaker didn't date on the date chosen in the app (e.g. recording yesterday's
+ * purchases today). A date said out loud ("semalam") is kept. Parsers fill in today when no date was said.
+ */
+export function applyChosenDate(candidates: VoiceCandidate[], parsedToday: string, chosen: string): VoiceCandidate[] {
+  if (chosen === parsedToday) return candidates;
+  return candidates.map((c) => (c.transaction_date === parsedToday ? { ...c, transaction_date: chosen } : c));
+}

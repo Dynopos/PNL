@@ -16,6 +16,7 @@ import {
 } from '../features/voice/api';
 import { ReviewCard } from '../features/voice/ReviewCard';
 import {
+  applyChosenDate,
   canAutoSave,
   ruleLabel,
   toReviewItems,
@@ -25,7 +26,8 @@ import {
 } from '../features/voice/review';
 import { speechErrorMessage, useSpeechRecognition } from '../features/voice/useSpeechRecognition';
 import { useInvalidate, useLoad } from '../lib/data';
-import { dateInKL, formatMYR } from '../lib/locale';
+import { addDays } from '../lib/dates';
+import { dateInKL, formatLongDate, formatMYR } from '../lib/locale';
 import type { EntryType } from '../lib/types';
 
 interface SavedRow {
@@ -33,6 +35,7 @@ interface SavedRow {
   type: EntryType;
   amount: string;
   label: string;
+  date: string;
 }
 
 type Phase =
@@ -67,6 +70,7 @@ export function VoicePage() {
   const [typed, setTyped] = useState('');
   const [params, setParams] = useSearchParams();
   const today = dateInKL();
+  const [entryDate, setEntryDate] = useState(today);
 
   const speech = useSpeechRecognition((text) => void process(text));
 
@@ -104,6 +108,7 @@ export function VoicePage() {
           type: v.transaction_type,
           amount: v.amount,
           label: v.merchant || v.description || 'Transaksi',
+          date: v.transaction_date,
         })),
       });
     } catch (err) {
@@ -129,7 +134,8 @@ export function VoicePage() {
       setPhase({ name: 'idle', message: 'Tiada transaksi dikenal pasti. Cuba sebut kedai dan jumlah, contohnya “Mydin 55 ringgit”.' });
       return;
     }
-    const items = toReviewItems(outcome.transactions, crypto.randomUUID(), categories, rules.data ?? []);
+    const dated = applyChosenDate(outcome.transactions, outcome.today ?? today, entryDate);
+    const items = toReviewItems(dated, crypto.randomUUID(), categories, rules.data ?? []);
     if (canAutoSave(items, today)) await save(items, transcript, outcome.source, true);
     else setPhase({ name: 'review', transcript, source: outcome.source, items, errors: {}, saving: false, saveError: '' });
   }
@@ -234,7 +240,10 @@ export function VoicePage() {
               <li key={r.id} className="flex items-center justify-between gap-3 py-2.5">
                 <span className="min-w-0">
                   <span className="block truncate font-medium">{r.label}</span>
-                  <span className="text-xs text-muted">{r.type === 'income' ? 'Pendapatan' : 'Perbelanjaan'}</span>
+                  <span className="text-xs text-muted">
+                    {r.type === 'income' ? 'Pendapatan' : 'Perbelanjaan'}
+                    {r.date !== today && ` · ${formatLongDate(r.date)}`}
+                  </span>
                 </span>
                 <span className={`font-display font-semibold tabular-nums ${r.type === 'income' ? 'text-accent' : ''}`}>
                   {r.type === 'income' ? '+' : '−'}
@@ -282,6 +291,8 @@ export function VoicePage() {
   return (
     <div className="space-y-4">
       <h1 className="font-display text-2xl font-bold tracking-tight">Rekod dengan suara</h1>
+
+      <DatePicker today={today} value={entryDate} onChange={setEntryDate} disabled={processing} />
 
       <section className="flex flex-col items-center rounded-3xl border border-line bg-surface px-6 py-8 text-center">
         {processing ? (
@@ -346,5 +357,61 @@ export function VoicePage() {
         Rakaman suara tidak disimpan.
       </p>
     </div>
+  );
+}
+
+function DatePicker({
+  today,
+  value,
+  onChange,
+  disabled,
+}: {
+  today: string;
+  value: string;
+  onChange: (date: string) => void;
+  disabled: boolean;
+}) {
+  const presets = [
+    { label: 'Hari ini', date: today },
+    { label: 'Semalam', date: addDays(today, -1) },
+    { label: 'Kelmarin', date: addDays(today, -2) },
+  ];
+  const custom = !presets.some((p) => p.date === value);
+  const chip = (active: boolean) =>
+    `min-h-10 shrink-0 rounded-full border px-4 text-sm font-semibold transition ${
+      active ? 'border-accent bg-accent-soft text-accent' : 'border-line bg-surface text-muted'
+    }`;
+  return (
+    <section aria-label="Tarikh transaksi">
+      <p className="mb-2 text-sm font-medium text-muted">
+        Tarikh transaksi: <span className="font-semibold text-ink">{formatLongDate(value)}</span>
+      </p>
+      <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
+        {presets.map((p) => (
+          <button
+            key={p.label}
+            type="button"
+            disabled={disabled}
+            aria-pressed={value === p.date}
+            onClick={() => onChange(p.date)}
+            className={chip(value === p.date)}
+          >
+            {p.label}
+          </button>
+        ))}
+        <label className={`${chip(custom)} relative flex items-center`}>
+          {custom ? formatLongDate(value) : 'Pilih tarikh'}
+          <input
+            type="date"
+            max={today}
+            value={value}
+            disabled={disabled}
+            onChange={(e) => e.target.value && e.target.value <= today && onChange(e.target.value)}
+            className="absolute inset-0 cursor-pointer opacity-0"
+            aria-label="Pilih tarikh lain"
+          />
+        </label>
+      </div>
+    </section>
   );
 }
