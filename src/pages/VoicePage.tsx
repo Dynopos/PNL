@@ -378,7 +378,7 @@ function DatePicker({
   ];
   const custom = !presets.some((p) => p.date === value);
   const chip = (active: boolean) =>
-    `min-h-10 shrink-0 rounded-full border px-4 text-sm font-semibold transition ${
+    `min-h-10 min-w-0 truncate rounded-full border px-1 text-xs font-semibold min-[360px]:text-[13px] transition ${
       active ? 'border-accent bg-accent-soft text-accent' : 'border-line bg-surface text-muted'
     }`;
   return (
@@ -386,7 +386,7 @@ function DatePicker({
       <p className="mb-2 text-sm font-medium text-muted">
         Tarikh transaksi: <span className="font-semibold text-ink">{formatLongDate(value)}</span>
       </p>
-      <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
+      <div className="grid grid-cols-4 gap-1 min-[360px]:gap-1.5">
         {presets.map((p) => (
           <button
             key={p.label}
@@ -399,8 +399,8 @@ function DatePicker({
             {p.label}
           </button>
         ))}
-        <label className={`${chip(custom)} relative flex items-center`}>
-          {custom ? formatLongDate(value) : 'Pilih tarikh'}
+        <label className={`${chip(custom)} relative flex items-center justify-center`}>
+          {custom ? shortDate(value) : 'Lain…'}
           <input
             type="date"
             max={today}
@@ -414,4 +414,9 @@ function DatePicker({
       </div>
     </section>
   );
+}
+
+/** "12 Okt": fits a chip; the full date is shown in the label above. */
+function shortDate(iso: string): string {
+  return new Intl.DateTimeFormat('ms-MY', { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(`${iso}T00:00:00Z`));
 }
