@@ -35,6 +35,28 @@ function getRecognition(): RecognitionCtor | undefined {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition;
 }
 
+const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
+
+/**
+ * Joins recognition results into one transcript. Desktop Chrome sends each result as a new
+ * piece; Android Chrome sends each result as the whole sentence so far ("Mydin", "Mydin 55",
+ * "Mydin 55 ringgit"). A result that repeats what we already have replaces it instead of
+ * being appended, so words aren't doubled.
+ */
+export function mergeResults(parts: string[]): string {
+  let text = '';
+  for (const raw of parts) {
+    const part = raw.replace(/\s+/g, ' ').trim();
+    if (!part) continue;
+    const a = norm(text);
+    const b = norm(part);
+    if (!a || b.startsWith(a)) text = part;
+    else if (a.endsWith(b)) continue;
+    else text = `${text} ${part}`;
+  }
+  return text;
+}
+
 /** 'not-allowed' | 'no-speech' | 'network' | 'audio-capture' | 'unsupported' | other browser codes */
 export type SpeechError = string;
 
@@ -70,8 +92,9 @@ export function useSpeechRecognition(onDone: (transcript: string) => void) {
     setError(null);
 
     rec.onresult = (e) => {
-      let text = '';
-      for (let i = 0; i < e.results.length; i++) text += e.results[i]![0].transcript;
+      const parts: string[] = [];
+      for (let i = 0; i < e.results.length; i++) parts.push(e.results[i]![0].transcript);
+      const text = mergeResults(parts);
       textRef.current = text;
       setTranscript(text);
     };
