@@ -1,7 +1,7 @@
 // Parses a voice transcript into candidate transactions. Nothing is saved here: the app shows
 // the result for review and saves through the save_transactions RPC.
 //
-// Deploy:  supabase functions deploy parse-voice
+// Deploy:  supabase functions deploy parse-voice --no-verify-jwt   (auth is checked below)
 // Secret:  supabase secrets set ANTHROPIC_API_KEY=...   (without it, the rule-based parser is used)
 import Anthropic from 'npm:@anthropic-ai/sdk@1.3.0';
 import { AI_SCHEMA, buildUserMessage, SYSTEM_PROMPT, validateAiOutput } from '../_shared/aiParse.ts';
@@ -45,9 +45,25 @@ async function parseWithAi(transcript: string, today: string): Promise<VoiceCand
   return validateAiOutput(JSON.parse(text.text), transcript, today);
 }
 
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+const SUPABASE_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? Deno.env.get('SUPABASE_PUBLISHABLE_KEY');
+
+/** Only signed-in users may use the (paid) parser. Asking Auth works for legacy and new JWT signing keys. */
+async function isSignedIn(req: Request): Promise<boolean> {
+  const auth = req.headers.get('Authorization');
+  if (!auth?.startsWith('Bearer ') || !SUPABASE_URL || !SUPABASE_KEY) return false;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, { headers: { Authorization: auth, apikey: SUPABASE_KEY } });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
+  if (!(await isSignedIn(req))) return json({ error: 'unauthorized' }, 401);
 
   let transcript: unknown;
   try {

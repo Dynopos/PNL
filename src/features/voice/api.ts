@@ -5,6 +5,9 @@ import type { EntryType } from '../../lib/types';
 
 export type ParseSource = 'ai' | 'rules' | 'local';
 
+/** Edge Function slug; dashboard-created functions may get a generated name. */
+const PARSE_FUNCTION = import.meta.env.VITE_PARSE_VOICE_FUNCTION?.trim() || 'parse-voice';
+
 export interface ParseOutcome {
   transactions: VoiceCandidate[];
   source: ParseSource;
@@ -13,7 +16,7 @@ export interface ParseOutcome {
 /** Server parse (AI with rule fallback); if the function is unreachable, parse on the device. */
 export async function parseTranscript(client: SupabaseClient, transcript: string): Promise<ParseOutcome> {
   try {
-    const { data, error } = await client.functions.invoke('parse-voice', { body: { transcript } });
+    const { data, error } = await client.functions.invoke(PARSE_FUNCTION, { body: { transcript } });
     if (error || !Array.isArray(data?.transactions)) throw error ?? new Error('Unexpected response');
     return { transactions: data.transactions as VoiceCandidate[], source: data.source === 'ai' ? 'ai' : 'rules' };
   } catch {
