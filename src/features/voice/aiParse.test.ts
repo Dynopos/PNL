@@ -1,4 +1,4 @@
-import { validateAiOutput } from '../../../supabase/functions/_shared/aiParse.ts';
+import { AI_SCHEMA, validateAiOutput } from '../../../supabase/functions/_shared/aiParse.ts';
 
 const TODAY = '2026-11-04';
 const entry = (over: Record<string, unknown>) => ({
@@ -63,5 +63,15 @@ describe('validateAiOutput', () => {
 
   it('throws on malformed output so the caller falls back to rules', () => {
     expect(() => validateAiOutput({ nope: true }, 'x', TODAY)).toThrow();
+  });
+});
+
+describe('AI_SCHEMA', () => {
+  it('expresses nullable fields with anyOf, never type arrays (the API rejects enum + type array)', () => {
+    const walk = (node: unknown): boolean =>
+      typeof node !== 'object' || node === null
+        ? true
+        : !Array.isArray((node as { type?: unknown }).type) && Object.values(node).every(walk);
+    expect(walk(AI_SCHEMA)).toBe(true);
   });
 });
