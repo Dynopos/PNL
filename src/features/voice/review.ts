@@ -19,6 +19,12 @@ export interface ReviewItem {
 }
 
 const UNCLEAR_TYPE = 'Pendapatan atau perbelanjaan?';
+const TYPE_ISSUE = /diterima|dibayar|pendapatan|perbelanjaan|jenis transaksi|income|expense/i;
+
+/** Drops notes about income-vs-expense (the AI words them its own way); the type picker covers them. */
+export function withoutTypeIssues(issues: string[]): string[] {
+  return issues.filter((i) => !TYPE_ISSUE.test(i));
+}
 
 /** What a remembered rule is keyed on: the merchant, or the description when no merchant was named. */
 export function ruleLabel(item: Pick<ReviewItem, 'merchant' | 'description'>): string {
@@ -41,7 +47,7 @@ export function toReviewItems(
 ): ReviewItem[] {
   return candidates.map((c, index) => {
     let type = c.type;
-    let issues = [...c.issues];
+    let issues = c.type === null ? [...withoutTypeIssues(c.issues), UNCLEAR_TYPE] : [...c.issues];
     let categoryId = type
       ? (categories.find((cat) => cat.type === type && cat.name === c.category)?.id ?? '')
       : '';
@@ -50,7 +56,7 @@ export function toReviewItems(
     const rule = matchRule(c, rules);
     const ruleCategory = rule && categories.find((cat) => cat.id === rule.category_id);
     if (ruleCategory && (type === null || type === ruleCategory.type)) {
-      if (type === null) issues = issues.filter((i) => i !== UNCLEAR_TYPE);
+      if (type === null) issues = withoutTypeIssues(issues);
       type = ruleCategory.type;
       categoryId = ruleCategory.id;
       ruleApplied = true;

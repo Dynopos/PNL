@@ -28,6 +28,20 @@ describe('toReviewItems', () => {
     expect(i).toMatchObject({ type: 'expense', categoryId: 'c-cogs', ruleApplied: true, issues: [] });
   });
 
+  it('shows one income-or-expense question even when the AI wrote its own', () => {
+    const [i] = toReviewItems(
+      [
+        {
+          merchant: null, description: 'Welfare', amount: '50.00', amount_options: [], currency: 'MYR', category: 'Lain-lain',
+          type: null, transaction_date: TODAY, text: '',
+          issues: ['Tidak jelas sama ada wang welfare ini diterima atau dibayar.', "Maksud 'welfare' tidak jelas.", 'Pendapatan atau perbelanjaan?'],
+        },
+      ],
+      'sub-1', categories, [],
+    );
+    expect(i!.issues).toEqual(["Maksud 'welfare' tidak jelas.", 'Pendapatan atau perbelanjaan?']);
+  });
+
   it('leaves the category empty until the user picks a type', () => {
     const [i] = items('Ali 50 ringgit');
     expect(i!.type).toBeNull();

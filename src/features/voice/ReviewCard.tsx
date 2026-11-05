@@ -2,7 +2,7 @@ import { AlertTriangle, X } from 'lucide-react';
 import { useId } from 'react';
 import { inputClass, labelClass } from '../../components/fieldStyles';
 import type { Category, EntryType } from '../../lib/types';
-import { ruleLabel, type ReviewErrors, type ReviewItem } from './review';
+import { ruleLabel, withoutTypeIssues, type ReviewErrors, type ReviewItem } from './review';
 
 const TYPES: [EntryType, string][] = [
   ['expense', 'Perbelanjaan'],
@@ -51,7 +51,7 @@ export function ReviewCard({
                 onChange({
                   type: value,
                   categoryId: defaultFor(value),
-                  issues: item.issues.filter((i) => i !== 'Pendapatan atau perbelanjaan?'),
+                  issues: withoutTypeIssues(item.issues),
                 })
               }
               className={`min-h-10 rounded-lg transition ${
