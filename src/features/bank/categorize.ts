@@ -7,10 +7,13 @@ export interface CategoryRule {
 
 /** Keywords seen in Malaysian bank statement descriptions, by default category name. First match wins. */
 const KEYWORDS: [string, string[]][] = [
+  // Every car cost (Saga, Bezza, Myvi: rental, fuel, upkeep, instalment, road tax) is a business expense, per the owner.
+  // Checked first so "kereta" wins over family, loan or sewa wording in the same line.
+  ['Petrol & Pengangkutan', ['petron', 'shell', 'caltex', 'bhp', 'touch n go', 'tng', 'parking', 'tol ']],
   // Owner's drawings and staff pay follow the user's own Dynopos GL rules.
   ['Kegunaan Peribadi Pemilik', [
     'atm withdrawal', 'withdrawal fee', 'atm cash', 'kenduri', 'family', 'famly', ' mama ', 'aqiqah', 'tiket', 'belanja ',
-    'welfare', 'duit rumah', 'loan rumah', 'tnb rumah', 'tusyen', 'yuran', 'tr to savings', 'tr to c/a', 'naza', 'myvi', 'bezza',
+    'welfare', 'duit rumah', 'loan rumah', 'tnb rumah', 'tusyen', 'yuran', 'tr to savings', 'tr to c/a',
   ]],
   ['Gaji Staff', ['gaji', 'salary', 'staff', 'pekerja', 'upah', 'elaun', 'allowance', 'wages', 'programmer']],
   ['Pinjaman & Pembiayaan', ['spaylater', 'paylater', 'pay later', 'atome', 'financing', 'pembiayaan', 'instalment', 'ansuran', 'loan']],
@@ -19,7 +22,6 @@ const KEYWORDS: [string, string[]][] = [
     'kms autocount', 'ti computer', 'jos tech', 'winning media', 'rcs communication', 'aje solution', 'supplier', 'pembekal',
     'hardware', 'printer', 'laptop', 'stok', 'stock',
   ]],
-  ['Petrol & Pengangkutan', ['petron', 'shell', 'caltex', 'bhp', 'minyak', 'myk ', 'servis', 'tayar', 'touch n go', 'tng', 'parking', 'tol ']],
   ['Bil & Utiliti', ['tnb', 'tenaga', 'syabas', 'air selangor', 'indah water', 'maxis', 'celcom', 'digi', 'umobile', 'unifi', 'telekom', 'broadband', 'takaful', 'insurans']],
   ['Rumah & Sewa', ['sewa', 'rental', 'rent ']],
   ['Makanan & Minuman', ['kfc', 'mcd', 'mcdonald', 'sushi', 'restoran', 'restaurant', 'kopitiam', 'makan', 'grabfood', 'foodpanda']],
@@ -29,6 +31,9 @@ const KEYWORDS: [string, string[]][] = [
   ['Pendidikan', ['sekolah', 'school', 'kursus', 'course', 'buku']],
   ['Hiburan', ['netflix', 'spotify', 'astro', 'cinema', 'gsc', 'tgv']],
 ];
+
+/** Car words as whole words only, so "MAMAK SAGAMAT" is not a Saga. Same list as the car-costs migration. */
+const CAR = /\b(kereta|saga|bezza|bezaa|myvi|axia|proton|perodua|naza|kenderaan|roadtax|road tax|minyak|myk|servis|tayar)\b/;
 
 /**
  * A category for a bank line: the user's own remembered rules first (longest keyword wins), then the
@@ -51,6 +56,9 @@ export function guessCategory(
   if (rule) return rule.category_id;
 
   if (type === 'expense') {
+    // Every car cost is a business expense (owner's rule), ahead of family, loan or rent wording.
+    const car = byName('Petrol & Pengangkutan');
+    if (car && CAR.test(text)) return car;
     for (const [name, words] of KEYWORDS) {
       const id = byName(name);
       if (id && words.some((w) => text.includes(w))) return id;

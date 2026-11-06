@@ -352,6 +352,8 @@ const MERCHANTS: { re: RegExp; name: string; category: string }[] = [
 ];
 
 const EXPENSE_KEYWORDS: [RegExp, string][] = [
+  // Car costs are business expenses (owner's rule), ahead of loan/rent wording.
+  [/\b(kereta|saga|bezza|myvi|axia|proton|perodua|kenderaan|roadtax|road tax|tayar|servis kereta)\b/, 'Petrol & Pengangkutan'],
   [/\b(gaji staff|gaji pekerja|staff|pekerja|upah|elaun|wages)\b/, 'Gaji Staff'],
   [/\b(stok|stock|supplier|pembekal|barang jual|bahan mentah|hardware)\b/, 'Kos Barang & Stok'],
   [/\b(loan|pinjaman|ansuran|instalment|spaylater|paylater|pembiayaan)\b/, 'Pinjaman & Pembiayaan'],

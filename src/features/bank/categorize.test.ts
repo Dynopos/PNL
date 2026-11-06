@@ -28,6 +28,10 @@ describe('guessCategory', () => {
     expect(guessCategory('POS DEBIT SHOPEEPAY 12345', 'expense', cats)).toBe('stok');
     expect(guessCategory('DUITNOW TO ACCOUNT EZC TECH SDN BHD', 'expense', cats)).toBe('stok');
     expect(guessCategory('SPAYLATER REPAYMENT', 'expense', cats)).toBe('loan');
+    for (const line of ['DUITNOW TO MARIA sewa kereta', 'DUITNOW minyak saga', 'POS DEBIT servis bezza', 'DUITNOW loan kereta myvi', 'DUITNOW family - tayar myvi', 'JPJ ROADTAX BEZZA']) {
+      expect(guessCategory(line, 'expense', cats)).toBe('petrol');
+    }
+    expect(guessCategory('MYDEBIT MAMAK SAGAMAT', 'expense', cats)).not.toBe('petrol');
     expect(guessCategory('ATM WITHDRAWAL AT MEPS', 'expense', cats)).toBe('owner');
     expect(guessCategory('DUITNOW TO ACCOUNT kenduri abang', 'expense', cats)).toBe('owner');
     expect(guessCategory('DUITNOW Programmer bulan 10', 'expense', cats)).toBe('gaji');
