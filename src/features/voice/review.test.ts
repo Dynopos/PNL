@@ -94,3 +94,10 @@ describe('applyChosenDate', () => {
     expect(applyChosenDate(parsed, TODAY, TODAY)).toBe(parsed);
   });
 });
+
+describe('staff pay by voice', () => {
+  it('is an expense under Gaji Staff', () => {
+    const [a, b] = parseWithRules('Gaji staff 1500, bayar gaji pekerja 800', TODAY);
+    expect([a!.type, a!.category, b!.type, b!.category]).toEqual(['expense', 'Gaji Staff', 'expense', 'Gaji Staff']);
+  });
+});

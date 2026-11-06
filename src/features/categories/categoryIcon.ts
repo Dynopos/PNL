@@ -11,6 +11,7 @@ import {
   Store,
   Tag,
   UserRound,
+  Users,
   UtensilsCrossed,
   Wallet,
   type LucideIcon,
@@ -30,6 +31,7 @@ const ICONS: Record<string, LucideIcon> = {
   'Bayaran Pelanggan': HandCoins,
   Gaji: Wallet,
   'Kegunaan Peribadi Pemilik': UserRound,
+  'Gaji Staff': Users,
 };
 
 export function categoryIcon(name: string | null | undefined): LucideIcon {

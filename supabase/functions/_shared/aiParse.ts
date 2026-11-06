@@ -40,7 +40,7 @@ Return one entry per amount the speaker gave. Several purchases or receipts in o
 
 For each entry:
 - amount: the ringgit amount the speaker said, as a number. If no amount was said for an item, use null and add an issue. Never estimate or make up an amount. If the speaker gave alternatives ("lima belas atau lima puluh"), set amount to null, list them in amount_options, and add an issue.
-- type: "income" for money received (sales, a customer paying, salary coming in, refunds received), "expense" for money spent. If the sentence does not make it clear, use null and add an issue - the user will choose. "Customer bayar" is income; "bayar parking" is an expense.
+- type: "income" for money received (sales, a customer paying, salary coming in, refunds received), "expense" for money spent. If the sentence does not make it clear, use null and add an issue - the user will choose. "Customer bayar" is income; "bayar parking" is an expense. Paying staff wages ("gaji staff", "bayar gaji pekerja") is an expense under "Gaji Staff"; the income category "Gaji" is only salary the owner receives.
 - category: exactly one name from the list for that type. Use "Lain-lain" when nothing fits. When type is null, use "Lain-lain".
 - merchant: the shop, company or person named (e.g. "Mydin", "Petronas"), otherwise null.
 - description: a short Malay description of what it was, using the speaker's words, otherwise null. Do not add details the speaker did not say.

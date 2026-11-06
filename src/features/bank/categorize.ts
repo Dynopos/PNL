@@ -8,6 +8,7 @@ export interface CategoryRule {
 /** Keywords seen in Malaysian bank statement descriptions, by default category name. First match wins. */
 const KEYWORDS: [string, string[]][] = [
   ['Kegunaan Peribadi Pemilik', ['family', 'famly', 'tusyen', 'yuran', 'tnb rumah', 'tr to savings', 'tr to c/a', 'loan', 'naza', 'myvi', 'bezza']],
+  ['Gaji Staff', ['gaji', 'salary', 'staff', 'pekerja', 'upah', 'elaun', 'allowance', 'wages']],
   ['Petrol & Pengangkutan', ['petron', 'shell', 'caltex', 'bhp', 'minyak', 'myk ', 'servis', 'tayar', 'touch n go', 'tng', 'parking', 'tol ']],
   ['Bil & Utiliti', ['tnb', 'tenaga', 'syabas', 'air selangor', 'indah water', 'maxis', 'celcom', 'digi', 'umobile', 'unifi', 'telekom', 'broadband', 'takaful', 'insurans']],
   ['Rumah & Sewa', ['sewa', 'rental', 'rent ']],

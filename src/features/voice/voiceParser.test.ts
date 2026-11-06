@@ -100,7 +100,7 @@ describe('income vs expense detection', () => {
     ['Jualan hari ini 1500 ringgit', 'income', 'Jualan', '1500.00'],
     ['Customer bayar 800 ringgit', 'income', 'Bayaran Pelanggan', '800.00'],
     ['Gaji masuk 2500 ringgit', 'income', 'Gaji', '2500.00'],
-    ['Bayar gaji pekerja 1200', 'expense', 'Lain-lain', '1200.00'],
+    ['Bayar gaji pekerja 1200', 'expense', 'Gaji Staff', '1200.00'],
     ['Mydin 55 ringgit', 'expense', 'Barang Dapur', '55.00'],
     ['Dapat duit dua ribu lima ratus', 'income', 'Lain-lain', '2500.00'],
   ])('%s', (text, type, category, amount) => {

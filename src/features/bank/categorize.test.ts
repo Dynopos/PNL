@@ -6,6 +6,7 @@ const cats: Category[] = [
   { id: 'petrol', user_id: null, name: 'Petrol & Pengangkutan', type: 'expense' },
   { id: 'bil', user_id: null, name: 'Bil & Utiliti', type: 'expense' },
   { id: 'owner', user_id: null, name: 'Kegunaan Peribadi Pemilik', type: 'expense' },
+  { id: 'gaji', user_id: null, name: 'Gaji Staff', type: 'expense' },
   { id: 'cogs', user_id: 'u1', name: 'Kos Bahan (COGS)', type: 'expense' },
   { id: 'bayaran', user_id: null, name: 'Bayaran Pelanggan', type: 'income' },
   { id: 'lain-i', user_id: null, name: 'Lain-lain', type: 'income' },
@@ -16,7 +17,8 @@ describe('guessCategory', () => {
     expect(guessCategory('DUITNOW TO ACCOUNT PETRONAS SG BULOH', 'expense', cats)).toBe('petrol');
     expect(guessCategory('JOMPAY TNB 12345', 'expense', cats)).toBe('bil');
     expect(guessCategory('FPX TNB RUMAH', 'expense', cats)).toBe('owner');
-    expect(guessCategory('DUITNOW TO ACCOUNT Gaji staff 4183 AIMAN', 'expense', cats)).toBe('lain-x');
+    expect(guessCategory('DUITNOW TO ACCOUNT Gaji staff 4183 AIMAN', 'expense', cats)).toBe('gaji');
+    expect(guessCategory('DUITNOW TO ACCOUNT Gaji staff', 'expense', cats.filter((c) => c.id !== 'gaji'))).toBe('lain-x');
     expect(guessCategory('SERVICE CHARGE', 'expense', cats)).toBe('lain-x');
   });
 

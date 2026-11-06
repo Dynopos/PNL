@@ -30,6 +30,7 @@ export const EXPENSE_CATEGORIES = [
   'Pendidikan',
   'Hiburan',
   'Shopping',
+  'Gaji Staff',
   'Kegunaan Peribadi Pemilik',
   'Lain-lain',
 ] as const;
@@ -348,6 +349,7 @@ const MERCHANTS: { re: RegExp; name: string; category: string }[] = [
 ];
 
 const EXPENSE_KEYWORDS: [RegExp, string][] = [
+  [/\b(gaji staff|gaji pekerja|staff|pekerja|upah|elaun|wages)\b/, 'Gaji Staff'],
   [/\b(bil|elektrik|letrik|internet|wifi|telefon|phone bill)\b/, 'Bil & Utiliti'],
   [/\b(petrol|minyak|diesel|parking|parkir|tol|toll|tambang|teksi|bas|lrt|mrt|ktm)\b/, 'Petrol & Pengangkutan'],
   [/\b(barang dapur|groceri|grocery|sayur|ikan|ayam|daging|beras|pasar|telur)\b/, 'Barang Dapur'],
