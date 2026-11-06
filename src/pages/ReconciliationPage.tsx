@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, FileUp, Link2, Link2Off, Plus, Trash2, Undo2, X } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, FileUp, Link2, Link2Off, ListPlus, Plus, Trash2, Undo2, X } from 'lucide-react';
 import { useMemo, useState, type ChangeEvent } from 'react';
 import { inputClass, primaryButton, secondaryButton } from '../components/fieldStyles';
 import { Spinner } from '../components/Spinner';
@@ -17,9 +17,11 @@ import {
   updateLine,
   type BankLine,
 } from '../features/bank/api';
+import { guessCategory, runInBatches } from '../features/bank/categorize';
 import { parseStatementText, type ParsedStatement } from '../features/bank/statementParser';
 import { useCategories } from '../features/categories/useCategories';
 import { friendlyError } from '../features/transactions/api';
+import { listMerchantRules } from '../features/voice/api';
 import { useInvalidate, useLoad } from '../lib/data';
 import { formatLongDate, formatMYR } from '../lib/locale';
 import { fromSen, toSen } from '../lib/money';
@@ -72,6 +74,8 @@ export function ReconciliationPage() {
   const [tab, setTab] = useState<Tab>('review');
   const [busyLine, setBusyLine] = useState<string | null>(null);
   const [actionError, setActionError] = useState('');
+  const [bulk, setBulk] = useState<{ done: number; total: number } | null>(null);
+  const rules = useLoad(() => listMerchantRules(client).catch(() => []), [client]);
 
   const statements = useLoad(() => (accountId ? listStatements(client, accountId) : pending()), [client, accountId]);
   const statement = statements.data?.find((s) => s.id === selected) ?? statements.data?.[0] ?? null;
@@ -86,6 +90,7 @@ export function ReconciliationPage() {
     return {
       review: all.filter((l) => l.transaction_id && l.needs_review),
       unmatched: all.filter((l) => !l.transaction_id && !l.ignored),
+      counted: all.filter((l) => !l.ignored),
       matched: all.filter((l) => l.transaction_id && !l.needs_review),
       ignored: all.filter((l) => l.ignored),
     };
@@ -123,11 +128,47 @@ export function ReconciliationPage() {
           ? `Statement ini sudah dimuat naik sebelum ini (${r.duplicates} baris sama). Tiada yang ditambah.`
           : `${r.inserted} baris disimpan${r.duplicates ? `, ${r.duplicates} sudah ada` : ''}. ${r.matched} dipadankan secara automatik.`,
       );
-      if (r.statement_id) setSelected(r.statement_id);
+      if (r.statement_id) {
+        setSelected(r.statement_id);
+        const fresh = await listLines(client, r.statement_id);
+        const added = await addAll(fresh.filter((l) => !l.transaction_id && !l.ignored));
+        if (added > 0) {
+          setNotice(
+            `${r.inserted} baris disimpan${r.duplicates ? `, ${r.duplicates} sudah ada` : ''}. ` +
+              `${r.matched} sama dengan rekod sedia ada, ${added} dimasukkan ke rekod.`,
+          );
+        }
+      }
       setTab('review');
       invalidate();
     } catch (err) {
       setUpload({ state: 'error', message: friendlyError(err) });
+    }
+  }
+
+  /** Adds bank lines as income/expense records with a guessed category. Lines already linked are skipped by the server. */
+  async function addAll(targets: BankLine[]): Promise<number> {
+    if (targets.length === 0) return 0;
+    setActionError('');
+    setBulk({ done: 0, total: targets.length });
+    try {
+      await runInBatches(
+        targets,
+        (l) =>
+          createTransactionFromLine(
+            client,
+            l.id,
+            guessCategory(l.description, l.direction === 'in' ? 'income' : 'expense', categories, rules.data ?? []),
+          ),
+        (done) => setBulk({ done, total: targets.length }),
+      );
+      return targets.length;
+    } catch (err) {
+      setActionError(`${friendlyError(err)} Tekan butang sekali lagi untuk sambung.`);
+      return 0;
+    } finally {
+      setBulk(null);
+      invalidate();
     }
   }
 
@@ -157,7 +198,8 @@ export function ReconciliationPage() {
       <div>
         <h1 className="font-display text-2xl font-bold tracking-tight">Padanan Bank</h1>
         <p className="mt-1 text-sm text-muted">
-          Padankan statement bank dengan rekod anda. Jumlah dan jenis mesti sama; tarikh boleh berbeza sehingga {MATCH_WINDOW_DAYS} hari.
+          Muat naik statement, semua baris terus masuk rekod dan dijumlahkan. Baris yang sama dengan rekod sedia ada (jumlah sama,
+          tarikh dalam {MATCH_WINDOW_DAYS} hari) dipadankan, jadi tidak dikira dua kali.
         </p>
       </div>
 
@@ -204,7 +246,7 @@ export function ReconciliationPage() {
                 Batal
               </button>
               <button type="button" className={primaryButton} onClick={saveStatement}>
-                Simpan & padankan
+                Simpan & masukkan ke rekod
               </button>
             </div>
           </div>
@@ -216,7 +258,13 @@ export function ReconciliationPage() {
               <FileUp className="size-8 text-accent" aria-hidden />
             )}
             <span className="font-semibold">
-              {upload.state === 'reading' ? 'Membaca PDF…' : upload.state === 'saving' ? 'Menyimpan & memadankan…' : 'Muat naik statement bank (PDF)'}
+              {upload.state === 'reading'
+                ? 'Membaca PDF…'
+                : upload.state === 'saving'
+                  ? bulk
+                    ? `Memasukkan ke rekod… ${bulk.done}/${bulk.total}`
+                    : 'Menyimpan & memadankan…'
+                  : 'Muat naik statement bank (PDF)'}
             </span>
             <span className="text-xs text-muted">CIMB · Maybank · fail PDF asal daripada bank</span>
             <input
@@ -278,6 +326,37 @@ export function ReconciliationPage() {
             )}
           </div>
 
+          {lines.data && <StatementTotals lines={groups.counted} />}
+
+          {groups.unmatched.length > 0 && upload.state !== 'saving' && (
+            <section className={`${card} border-accent/40`}>
+              <p className="font-display font-semibold">
+                {groups.unmatched.length} baris belum masuk rekod
+              </p>
+              <p className="mt-1 text-sm text-muted">
+                Masukkan semua sekali gus. Kategori diteka daripada keterangan bank; boleh ditukar kemudian di Transaksi.
+              </p>
+              <button
+                type="button"
+                disabled={bulk !== null}
+                className={`${primaryButton} mt-3 inline-flex w-full items-center justify-center gap-2`}
+                onClick={() => addAll(groups.unmatched)}
+              >
+                {bulk ? (
+                  <>
+                    <Spinner />
+                    Memasukkan… {bulk.done}/{bulk.total}
+                  </>
+                ) : (
+                  <>
+                    <ListPlus className="size-5" aria-hidden />
+                    Masukkan semua ke rekod
+                  </>
+                )}
+              </button>
+            </section>
+          )}
+
           <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]" role="tablist" aria-label="Status padanan">
             {TABS.map((t) => (
               <button
@@ -336,6 +415,34 @@ export function ReconciliationPage() {
         </>
       )}
     </div>
+  );
+}
+
+function StatementTotals({ lines }: { lines: BankLine[] }) {
+  const sum = (dir: 'in' | 'out') => lines.filter((l) => l.direction === dir).reduce((s, l) => s + toSen(l.amount), 0);
+  const inSen = sum('in');
+  const outSen = sum('out');
+  const recorded = lines.filter((l) => l.transaction_id).length;
+  return (
+    <section className={card} aria-label="Jumlah statement">
+      <div className="grid grid-cols-3 gap-2 text-sm">
+        <div>
+          <p className="text-xs text-muted">Masuk</p>
+          <p className="font-display font-semibold tabular-nums text-accent">{formatMYR(fromSen(inSen))}</p>
+        </div>
+        <div>
+          <p className="text-xs text-muted">Keluar</p>
+          <p className="font-display font-semibold tabular-nums text-danger">{formatMYR(fromSen(outSen))}</p>
+        </div>
+        <div>
+          <p className="text-xs text-muted">Bersih</p>
+          <p className="font-display font-semibold tabular-nums">{formatMYR(fromSen(inSen - outSen))}</p>
+        </div>
+      </div>
+      <p className="mt-2 text-xs text-muted">
+        {recorded} daripada {lines.length} baris sudah dalam rekod (tidak termasuk yang diabaikan).
+      </p>
+    </section>
   );
 }
 
