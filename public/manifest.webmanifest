@@ -1,0 +1,23 @@
+{
+  "id": "/",
+  "name": "VAPRO DuitVoice",
+  "short_name": "DuitVoice",
+  "description": "Rekod pendapatan dan perbelanjaan bisnes dengan suara. PNL, General Ledger dan Akaun Pengurusan.",
+  "lang": "ms",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#07080b",
+  "theme_color": "#07080b",
+  "categories": ["finance", "business", "productivity"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Rekod dengan suara", "short_name": "Rekod", "url": "/rekod?mula=1", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Laporan Untung Rugi", "short_name": "PNL", "url": "/laporan/pnl", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
