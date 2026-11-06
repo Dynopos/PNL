@@ -151,3 +151,34 @@ export async function reconcile(client: SupabaseClient, accountId: string) {
     await client.rpc('reconcile_account', { p_account_id: accountId, p_window_days: MATCH_WINDOW_DAYS }),
   ) as number;
 }
+
+/** Statements overlapping a date range, with their printed opening and closing balances. */
+export async function listStatementsInRange(client: SupabaseClient, accountId: string, from: string, to: string) {
+  return unwrap(
+    await client
+      .from('bank_statements')
+      .select('id, bank, period_from, period_to, opening_balance, closing_balance')
+      .eq('account_id', accountId)
+      .lte('period_from', to)
+      .gte('period_to', from)
+      .order('period_from'),
+  ) as { id: string; bank: string; period_from: string; period_to: string; opening_balance: number | null; closing_balance: number | null }[];
+}
+
+/** Amounts and record status of every line in the given statements (batched past the API row limit). */
+export async function listStatementLineTotals(client: SupabaseClient, statementIds: string[]) {
+  const out: { statement_id: string; amount: number; direction: 'in' | 'out'; transaction_id: string | null; ignored: boolean }[] = [];
+  if (statementIds.length === 0) return out;
+  for (let page = 0; ; page++) {
+    const rows = unwrap(
+      await client
+        .from('bank_lines')
+        .select('statement_id, amount, direction, transaction_id, ignored')
+        .in('statement_id', statementIds)
+        .order('id')
+        .range(page * 1000, page * 1000 + 999),
+    ) as typeof out;
+    out.push(...rows);
+    if (rows.length < 1000) return out;
+  }
+}

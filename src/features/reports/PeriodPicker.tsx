@@ -8,10 +8,10 @@ const shortDate = (iso: string) =>
   );
 
 /** Report period kept in the URL (?tempoh=month&langkah=-1), so links and the back button keep it. */
-export function usePeriodParams(today: string) {
+export function usePeriodParams(today: string, fallback: PnlPeriodKind = 'month') {
   const [params, setParams] = useSearchParams();
   const raw = params.get('tempoh');
-  const kind: PnlPeriodKind = raw === 'quarter' || raw === 'year' ? raw : 'month';
+  const kind: PnlPeriodKind = raw === 'month' || raw === 'quarter' || raw === 'year' ? raw : fallback;
   const steps = Math.min(0, Math.trunc(Number(params.get('langkah')) || 0));
   const set = (k: PnlPeriodKind, s: number) =>
     setParams(
