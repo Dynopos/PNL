@@ -7,8 +7,6 @@ export interface CategoryRule {
 
 /** Keywords seen in Malaysian bank statement descriptions, by default category name. First match wins. */
 const KEYWORDS: [string, string[]][] = [
-  // Every car cost (Saga, Bezza, Myvi: rental, fuel, upkeep, instalment, road tax) is a business expense, per the owner.
-  // Checked first so "kereta" wins over family, loan or sewa wording in the same line.
   ['Petrol & Pengangkutan', ['petron', 'shell', 'caltex', 'bhp', 'touch n go', 'tng', 'parking', 'tol ']],
   // Owner's drawings and staff pay follow the user's own Dynopos GL rules.
   ['Kegunaan Peribadi Pemilik', [
@@ -22,6 +20,11 @@ const KEYWORDS: [string, string[]][] = [
     'kms autocount', 'ti computer', 'jos tech', 'winning media', 'rcs communication', 'aje solution', 'supplier', 'pembekal',
     'hardware', 'printer', 'laptop', 'stok', 'stock',
   ]],
+  ['Software & Langganan', [
+    'subscription', 'langganan', 'software', 'bukku', 'chatgpt', 'openai', 'claude', 'anthropic', 'google one', 'google workspace',
+    'capcut', 'canva', 'adobe', 'heygen', 'storehub', 'photoroom', 'openart', 'kling', 'hosting', 'domain', 'cloudflare',
+    'netlify', 'supabase', 'github',
+  ]],
   ['Bil & Utiliti', ['tnb', 'tenaga', 'syabas', 'air selangor', 'indah water', 'maxis', 'celcom', 'digi', 'umobile', 'unifi', 'telekom', 'broadband', 'takaful', 'insurans']],
   ['Rumah & Sewa', ['sewa', 'rental', 'rent ']],
   ['Makanan & Minuman', ['kfc', 'mcd', 'mcdonald', 'sushi', 'restoran', 'restaurant', 'kopitiam', 'makan', 'grabfood', 'foodpanda']],
@@ -31,6 +34,9 @@ const KEYWORDS: [string, string[]][] = [
   ['Pendidikan', ['sekolah', 'school', 'kursus', 'course', 'buku']],
   ['Hiburan', ['netflix', 'spotify', 'astro', 'cinema', 'gsc', 'tgv']],
 ];
+
+/** Everything paid to Borhan is software and subscriptions (owner's rule). */
+const BORHAN = /\bborhan\b/;
 
 /** Car words as whole words only, so "MAMAK SAGAMAT" is not a Saga. Same list as the car-costs migration. */
 const CAR = /\b(kereta|saga|bezza|bezaa|myvi|axia|proton|perodua|naza|kenderaan|roadtax|road tax|minyak|myk|servis|tayar)\b/;
@@ -56,7 +62,9 @@ export function guessCategory(
   if (rule) return rule.category_id;
 
   if (type === 'expense') {
-    // Every car cost is a business expense (owner's rule), ahead of family, loan or rent wording.
+    // Owner's rules, ahead of everything else: payments to Borhan are software; every car cost is transport.
+    const software = byName('Software & Langganan');
+    if (software && BORHAN.test(text)) return software;
     const car = byName('Petrol & Pengangkutan');
     if (car && CAR.test(text)) return car;
     for (const [name, words] of KEYWORDS) {

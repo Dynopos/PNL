@@ -17,7 +17,7 @@ begin
     'missing display_name should be null, not empty';
   assert (select count(*) from public.accounts where account_type = 'business' and account_name = 'Bisnes') = 2,
     'signup trigger should create a Business account per user';
-  assert (select count(*) from public.categories where user_id is null and type = 'expense') = 15, 'fifteen system expense categories expected';
+  assert (select count(*) from public.categories where user_id is null and type = 'expense') = 16, 'sixteen system expense categories expected';
   assert (select count(*) from public.categories where user_id is null and type = 'income') = 4, 'four system income categories expected';
   raise notice 'ok  signup bootstrap + default categories';
 end $$;
@@ -38,7 +38,7 @@ declare
   v_cat uuid := (select id from public.categories where name = 'Barang Dapur');
 begin
   assert (select count(*) from public.accounts) = 1, 'A should see only own account';
-  assert (select count(*) from public.categories) = 19, 'A should see system categories only, not B''s';
+  assert (select count(*) from public.categories) = 20, 'A should see system categories only, not B''s';
   assert (select count(*) from public.transactions) = 0, 'A should not see B''s transactions';
   assert (select count(*) from public.profiles) = 1, 'A should see only own profile';
 

@@ -115,3 +115,10 @@ describe('car costs by voice', () => {
     expect(r.map((c) => [c.type, c.category])).toEqual(Array(4).fill(['expense', 'Petrol & Pengangkutan']));
   });
 });
+
+describe('Borhan and software by voice', () => {
+  it('are Software & Langganan', () => {
+    const r = parseWithRules('Bayar Borhan 500, langganan canva 60', TODAY);
+    expect(r.map((c) => [c.type, c.category])).toEqual([['expense', 'Software & Langganan'], ['expense', 'Software & Langganan']]);
+  });
+});

@@ -32,6 +32,7 @@ export const EXPENSE_CATEGORIES = [
   'Shopping',
   'Kos Barang & Stok',
   'Pendahuluan Pembekal',
+  'Software & Langganan',
   'Gaji Staff',
   'Pinjaman & Pembiayaan',
   'Kegunaan Peribadi Pemilik',
@@ -352,6 +353,8 @@ const MERCHANTS: { re: RegExp; name: string; category: string }[] = [
 ];
 
 const EXPENSE_KEYWORDS: [RegExp, string][] = [
+  // Payments to Borhan are software and subscriptions (owner's rule).
+  [/\b(borhan|software|langganan|subscription|hosting|domain)\b/, 'Software & Langganan'],
   // Car costs are business expenses (owner's rule), ahead of loan/rent wording.
   [/\b(kereta|saga|bezza|myvi|axia|proton|perodua|kenderaan|roadtax|road tax|tayar|servis kereta)\b/, 'Petrol & Pengangkutan'],
   [/\b(gaji staff|gaji pekerja|staff|pekerja|upah|elaun|wages)\b/, 'Gaji Staff'],

@@ -13,7 +13,7 @@ begin
     ('Kos Barang & Stok', 'expense', '5000'), ('Pendahuluan Pembekal', 'expense', '5010'),
     ('Petrol & Pengangkutan', 'expense', '6000'), ('Lain-lain', 'expense', '6000'),
     ('Gaji Staff', 'expense', '6050'), ('Kegunaan Peribadi Pemilik', 'expense', '6100'),
-    ('Pinjaman & Pembiayaan', 'expense', '6200')) v(name, type, gl)
+    ('Pinjaman & Pembiayaan', 'expense', '6200'), ('Software & Langganan', 'expense', '6000')) v(name, type, gl)
   loop
     assert (select gl_account from public.categories
             where user_id is null and name = r.name and type::text = r.type) = r.gl,

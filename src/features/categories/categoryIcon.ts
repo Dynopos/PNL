@@ -1,4 +1,5 @@
 import {
+  AppWindow,
   Clapperboard,
   Fuel,
   GraduationCap,
@@ -32,6 +33,7 @@ const ICONS: Record<string, LucideIcon> = {
   Gaji: Wallet,
   'Kegunaan Peribadi Pemilik': UserRound,
   'Gaji Staff': Users,
+  'Software & Langganan': AppWindow,
 };
 
 export function categoryIcon(name: string | null | undefined): LucideIcon {
