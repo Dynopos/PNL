@@ -7,14 +7,24 @@ export interface CategoryRule {
 
 /** Keywords seen in Malaysian bank statement descriptions, by default category name. First match wins. */
 const KEYWORDS: [string, string[]][] = [
-  ['Kegunaan Peribadi Pemilik', ['family', 'famly', 'tusyen', 'yuran', 'tnb rumah', 'tr to savings', 'tr to c/a', 'loan', 'naza', 'myvi', 'bezza']],
-  ['Gaji Staff', ['gaji', 'salary', 'staff', 'pekerja', 'upah', 'elaun', 'allowance', 'wages']],
+  // Owner's drawings and staff pay follow the user's own Dynopos GL rules.
+  ['Kegunaan Peribadi Pemilik', [
+    'atm withdrawal', 'withdrawal fee', 'atm cash', 'kenduri', 'family', 'famly', ' mama ', 'aqiqah', 'tiket', 'belanja ',
+    'welfare', 'duit rumah', 'loan rumah', 'tnb rumah', 'tusyen', 'yuran', 'tr to savings', 'tr to c/a', 'naza', 'myvi', 'bezza',
+  ]],
+  ['Gaji Staff', ['gaji', 'salary', 'staff', 'pekerja', 'upah', 'elaun', 'allowance', 'wages', 'programmer']],
+  ['Pinjaman & Pembiayaan', ['spaylater', 'paylater', 'pay later', 'atome', 'financing', 'pembiayaan', 'instalment', 'ansuran', 'loan']],
+  ['Kos Barang & Stok', [
+    'shopee', 'shopeepay', 'lazada', 'tiktok', 'ezc tech', 'mdotpos', 'highstead', 'redsoft', 'teqcom', 'on 9 trading',
+    'kms autocount', 'ti computer', 'jos tech', 'winning media', 'rcs communication', 'aje solution', 'supplier', 'pembekal',
+    'hardware', 'printer', 'laptop', 'stok', 'stock',
+  ]],
   ['Petrol & Pengangkutan', ['petron', 'shell', 'caltex', 'bhp', 'minyak', 'myk ', 'servis', 'tayar', 'touch n go', 'tng', 'parking', 'tol ']],
   ['Bil & Utiliti', ['tnb', 'tenaga', 'syabas', 'air selangor', 'indah water', 'maxis', 'celcom', 'digi', 'umobile', 'unifi', 'telekom', 'broadband', 'takaful', 'insurans']],
   ['Rumah & Sewa', ['sewa', 'rental', 'rent ']],
   ['Makanan & Minuman', ['kfc', 'mcd', 'mcdonald', 'sushi', 'restoran', 'restaurant', 'kopitiam', 'makan', 'grabfood', 'foodpanda']],
   ['Barang Dapur', ['mydin', 'aeon', 'lotus', 'giant', 'econsave', 'speedmart', 'farm fresh']],
-  ['Shopping', ['shopee', 'lazada', 'mr diy', 'mr. diy', 'tiktok shop']],
+  ['Shopping', ['mr diy', 'mr. diy']],
   ['Kesihatan', ['klinik', 'clinic', 'farmasi', 'pharmacy', 'hospital', 'guardian', 'watsons']],
   ['Pendidikan', ['sekolah', 'school', 'kursus', 'course', 'buku']],
   ['Hiburan', ['netflix', 'spotify', 'astro', 'cinema', 'gsc', 'tgv']],

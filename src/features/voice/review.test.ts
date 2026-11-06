@@ -101,3 +101,10 @@ describe('staff pay by voice', () => {
     expect([a!.type, a!.category, b!.type, b!.category]).toEqual(['expense', 'Gaji Staff', 'expense', 'Gaji Staff']);
   });
 });
+
+describe('stock and financing by voice', () => {
+  it('maps to the new GL categories', () => {
+    const [a, b] = parseWithRules('Beli stok supplier 2000, bayar ansuran kereta 900', TODAY);
+    expect([a!.type, a!.category, b!.type, b!.category]).toEqual(['expense', 'Kos Barang & Stok', 'expense', 'Pinjaman & Pembiayaan']);
+  });
+});

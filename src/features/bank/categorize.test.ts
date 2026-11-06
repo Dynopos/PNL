@@ -7,6 +7,8 @@ const cats: Category[] = [
   { id: 'bil', user_id: null, name: 'Bil & Utiliti', type: 'expense' },
   { id: 'owner', user_id: null, name: 'Kegunaan Peribadi Pemilik', type: 'expense' },
   { id: 'gaji', user_id: null, name: 'Gaji Staff', type: 'expense' },
+  { id: 'stok', user_id: null, name: 'Kos Barang & Stok', type: 'expense' },
+  { id: 'loan', user_id: null, name: 'Pinjaman & Pembiayaan', type: 'expense' },
   { id: 'cogs', user_id: 'u1', name: 'Kos Bahan (COGS)', type: 'expense' },
   { id: 'bayaran', user_id: null, name: 'Bayaran Pelanggan', type: 'income' },
   { id: 'lain-i', user_id: null, name: 'Lain-lain', type: 'income' },
@@ -20,6 +22,16 @@ describe('guessCategory', () => {
     expect(guessCategory('DUITNOW TO ACCOUNT Gaji staff 4183 AIMAN', 'expense', cats)).toBe('gaji');
     expect(guessCategory('DUITNOW TO ACCOUNT Gaji staff', 'expense', cats.filter((c) => c.id !== 'gaji'))).toBe('lain-x');
     expect(guessCategory('SERVICE CHARGE', 'expense', cats)).toBe('lain-x');
+  });
+
+  it('follows the Dynopos GL rules for stock, financing and drawings', () => {
+    expect(guessCategory('POS DEBIT SHOPEEPAY 12345', 'expense', cats)).toBe('stok');
+    expect(guessCategory('DUITNOW TO ACCOUNT EZC TECH SDN BHD', 'expense', cats)).toBe('stok');
+    expect(guessCategory('SPAYLATER REPAYMENT', 'expense', cats)).toBe('loan');
+    expect(guessCategory('ATM WITHDRAWAL AT MEPS', 'expense', cats)).toBe('owner');
+    expect(guessCategory('DUITNOW TO ACCOUNT kenduri abang', 'expense', cats)).toBe('owner');
+    expect(guessCategory('DUITNOW Programmer bulan 10', 'expense', cats)).toBe('gaji');
+    expect(guessCategory('MYDEBIT PURCHASE MAMAK CORNER', 'expense', cats)).not.toBe('owner');
   });
 
   it('puts money in under Bayaran Pelanggan', () => {

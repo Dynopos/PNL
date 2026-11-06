@@ -59,7 +59,7 @@ export async function listTransactions(
 }
 
 export async function listCategories(client: SupabaseClient): Promise<Category[]> {
-  const rows = unwrap(await client.from('categories').select('id, user_id, name, type')) as Category[];
+  const rows = unwrap(await client.from('categories').select('*')) as Category[]; // '*' keeps working before gl_account exists
   // System defaults keep their curated order; "Lain-lain" stays last.
   return rows.sort((a, b) => {
     const rank = (c: Category) => (c.name === 'Lain-lain' ? 2 : c.user_id ? 1 : 0);

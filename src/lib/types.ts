@@ -5,6 +5,8 @@ export interface Category {
   user_id: string | null;
   name: string;
   type: EntryType;
+  /** GL account code (chart of accounts); absent until the chart-of-accounts migration is applied. */
+  gl_account?: string;
 }
 
 export interface Transaction {

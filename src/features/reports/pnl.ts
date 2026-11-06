@@ -1,6 +1,7 @@
 import { addMonths, endOfMonth } from '../../lib/dates';
 import { fromSen, toSen } from '../../lib/money';
-import type { CategoryTotal } from '../../lib/types';
+import type { Category, CategoryTotal } from '../../lib/types';
+import { GL_BY_CODE, glOf, type GlCode } from './gl';
 
 export const OWNER_CATEGORY = 'Kegunaan Peribadi Pemilik';
 
@@ -45,58 +46,102 @@ export interface PnlLine {
   label: string;
   amount: number;
   count: number;
-  /** Share of revenue, 0–1; null when there is no revenue. */
+  /** Share of sales, 0–1; null when there are no sales. */
   ofRevenue: number | null;
 }
 
+export interface PnlSection {
+  code: GlCode;
+  name: string;
+  lines: PnlLine[];
+  total: number;
+  count: number;
+}
+
 export interface Pnl {
-  revenue: PnlLine[];
-  revenueTotal: number;
-  expenses: PnlLine[];
-  expenseTotal: number;
+  sales: PnlSection;
+  cogs: PnlSection;
+  cogsAdvance: PnlSection;
+  costOfSales: number;
+  grossProfit: number;
+  opex: PnlSection;
+  operatingProfit: number;
+  salary: PnlSection;
+  financing: PnlSection;
+  /** Profit before the owner's drawings. */
   netProfit: number;
   margin: number | null;
-  drawings: number;
-  drawingsCount: number;
-  /** Ledger account of the owner's drawings, when there are any. */
-  drawingsKey: string | null;
-  retained: number;
+  drawings: PnlSection;
+  /** Net Cash Profit in the Dynopos GL: net profit after the owner's drawings. */
+  netCash: number;
+  revenueTotal: number;
   empty: boolean;
 }
 
 /**
- * A cash-basis profit and loss statement. Owner's personal use of business money is a drawing,
- * not a business expense, so it is shown after net profit.
+ * Cash-basis profit and loss in the Dynopos GL layout: Sales − COGS = Gross Profit; − OPEX = Operating
+ * Profit; − Staff Salary − Loan & Financing = Net Profit; − Owner Drawing = Net Cash Profit.
  */
-export function buildPnl(income: CategoryTotal[], expense: CategoryTotal[]): Pnl {
-  const sen = (rows: CategoryTotal[]) => rows.reduce((s, r) => s + toSen(r.total), 0);
-  const owner = expense.filter((r) => r.category_name === OWNER_CATEGORY);
-  const business = expense.filter((r) => r.category_name !== OWNER_CATEGORY);
-  const revenueSen = sen(income);
-  const expenseSen = sen(business);
-  const drawingsSen = sen(owner);
-  const line = (type: 'income' | 'expense') => (r: CategoryTotal): PnlLine => ({
-    key: r.category_id ?? `tiada-${type}`,
-    categoryId: r.category_id,
-    label: r.category_name,
-    amount: Number(r.total),
-    count: r.tx_count,
-    ofRevenue: revenueSen > 0 ? toSen(r.total) / revenueSen : null,
+export function buildPnl(income: CategoryTotal[], expense: CategoryTotal[], categories: Category[] = []): Pnl {
+  const byId = new Map(categories.map((c) => [c.id, c]));
+  const rows = [
+    ...income.map((r) => ({ r, type: 'income' as const })),
+    ...expense.map((r) => ({ r, type: 'expense' as const })),
+  ].map(({ r, type }) => {
+    const category = (r.category_id && byId.get(r.category_id)) || (r.category_id ? { name: r.category_name, type } : undefined);
+    return { r, type, code: glOf(category, type) };
   });
-  const byAmount = (a: PnlLine, b: PnlLine) => b.amount - a.amount || a.label.localeCompare(b.label);
-  const netSen = revenueSen - expenseSen;
+  const salesSen = rows.filter((x) => x.code === '4000').reduce((s, x) => s + toSen(x.r.total), 0);
+
+  const section = (code: GlCode): PnlSection => {
+    const mine = rows.filter((x) => x.code === code);
+    const sen = mine.reduce((s, x) => s + toSen(x.r.total), 0);
+    return {
+      code,
+      name: GL_BY_CODE.get(code)!.name,
+      lines: mine
+        .map(({ r, type }) => ({
+          key: r.category_id ?? `tiada-${type}`,
+          categoryId: r.category_id,
+          label: r.category_name,
+          amount: Number(r.total),
+          count: r.tx_count,
+          ofRevenue: salesSen > 0 ? toSen(r.total) / salesSen : null,
+        }))
+        .sort((a, b) => b.amount - a.amount || a.label.localeCompare(b.label)),
+      total: fromSen(sen),
+      count: mine.reduce((s, x) => s + x.r.tx_count, 0),
+    };
+  };
+
+  const sales = section('4000');
+  const cogs = section('5000');
+  const cogsAdvance = section('5010');
+  const opex = section('6000');
+  const salary = section('6050');
+  const drawings = section('6100');
+  const financing = section('6200');
+  const sen = (n: number) => toSen(n);
+  const costSen = sen(cogs.total) + sen(cogsAdvance.total);
+  const grossSen = salesSen - costSen;
+  const operatingSen = grossSen - sen(opex.total);
+  const netSen = operatingSen - sen(salary.total) - sen(financing.total);
   return {
-    revenue: income.map(line('income')).sort(byAmount),
-    revenueTotal: fromSen(revenueSen),
-    expenses: business.map(line('expense')).sort(byAmount),
-    expenseTotal: fromSen(expenseSen),
+    sales,
+    cogs,
+    cogsAdvance,
+    costOfSales: fromSen(costSen),
+    grossProfit: fromSen(grossSen),
+    opex,
+    operatingProfit: fromSen(operatingSen),
+    salary,
+    financing,
     netProfit: fromSen(netSen),
-    margin: revenueSen > 0 ? netSen / revenueSen : null,
-    drawings: fromSen(drawingsSen),
-    drawingsCount: owner.reduce((s, r) => s + r.tx_count, 0),
-    drawingsKey: owner[0]?.category_id ?? null,
-    retained: fromSen(netSen - drawingsSen),
-    empty: income.length === 0 && expense.length === 0,
+    margin: salesSen > 0 ? netSen / salesSen : null,
+    drawings,
+    netCash: fromSen(netSen - sen(drawings.total)),
+    revenueTotal: fromSen(salesSen),
+    empty: rows.length === 0,
   };
 }
 
