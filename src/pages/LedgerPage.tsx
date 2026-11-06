@@ -175,8 +175,8 @@ function Index({
           <thead>
             <tr className="border-b border-line text-left text-xs text-muted">
               <th className="py-1.5 font-semibold">Akaun</th>
-              <th className="py-1.5 text-right font-semibold">Debit</th>
-              <th className="py-1.5 text-right font-semibold">Kredit</th>
+              <th className="whitespace-nowrap py-1.5 pl-3 text-right font-semibold">Debit</th>
+              <th className="whitespace-nowrap py-1.5 pl-3 text-right font-semibold">Kredit</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line/60">
@@ -187,16 +187,16 @@ function Index({
                   <td className="py-1.5 pr-2">
                     <span className="font-mono text-xs text-muted">{r.code}</span> {r.name}
                   </td>
-                  <td className="py-1.5 text-right">{plain(r.debit)}</td>
-                  <td className="py-1.5 text-right">{plain(r.credit)}</td>
+                  <td className="whitespace-nowrap py-1.5 pl-3 text-right">{plain(r.debit)}</td>
+                  <td className="whitespace-nowrap py-1.5 pl-3 text-right">{plain(r.credit)}</td>
                 </tr>
               ))}
           </tbody>
           <tfoot>
             <tr className="border-t-4 border-double border-line font-bold">
               <td className="py-2">Jumlah</td>
-              <td className="py-2 text-right">{plain(tb.debit)}</td>
-              <td className="py-2 text-right">{plain(tb.credit)}</td>
+              <td className="whitespace-nowrap py-2 pl-3 text-right">{plain(tb.debit)}</td>
+              <td className="whitespace-nowrap py-2 pl-3 text-right">{plain(tb.credit)}</td>
             </tr>
           </tfoot>
         </table>
@@ -357,10 +357,12 @@ function AccountView({
               Tunjuk lagi ({ledger.rows.length - shown} lagi)
             </button>
           )}
-          <div className="grid grid-cols-3 gap-2 border-t-4 border-double border-line px-4 py-3 text-sm font-bold tabular-nums">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-t-4 border-double border-line px-4 py-3 text-sm font-bold tabular-nums">
             <span>Jumlah</span>
-            <span className="text-right">Dr {plain(ledger.totalDebit)}</span>
-            <span className="text-right">Kr {plain(ledger.totalCredit)}</span>
+            <span className="ml-auto flex flex-wrap justify-end gap-x-4">
+              <span className="whitespace-nowrap">Dr {plain(ledger.totalDebit)}</span>
+              <span className="whitespace-nowrap">Kr {plain(ledger.totalCredit)}</span>
+            </span>
           </div>
         </section>
       )}
