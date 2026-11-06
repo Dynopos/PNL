@@ -10,6 +10,7 @@ import {
   getTopMerchants,
   getTotalsByCategory,
 } from '../features/transactions/api';
+import { ReportsNav } from '../features/reports/ReportsNav';
 import { REPORT_PERIODS, reportRange, weekLabel, type ReportPeriod } from '../features/reports/periods';
 import { SpendingChart, type ChartPoint } from '../features/reports/SpendingChart';
 import { useLoad } from '../lib/data';
@@ -101,6 +102,7 @@ export function ReportsPage() {
   return (
     <div className="space-y-4">
       <h1 className="font-display text-2xl font-bold tracking-tight">Laporan</h1>
+      <ReportsNav />
 
       <div role="tablist" aria-label="Tempoh laporan" className="grid grid-cols-3 rounded-xl bg-surface-2 p-1 text-sm font-semibold">
         {REPORT_PERIODS.map((p) => (

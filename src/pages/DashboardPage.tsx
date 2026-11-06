@@ -201,13 +201,13 @@ export function DashboardPage() {
         </span>
         <span className="flex-1">
           <span className="block font-display font-semibold">Padanan Bank</span>
-          <span className="block text-sm text-muted">Padankan statement bank dengan rekod anda</span>
+          <span className="block text-sm text-muted">Masukkan statement bank ke rekod</span>
         </span>
         <ChevronRight className="size-5 text-muted" aria-hidden />
       </Link>
 
-      <a
-        href="/pnl/index.html"
+      <Link
+        to="/laporan/pnl"
         className="flex items-center gap-4 rounded-2xl border border-line bg-surface p-4 transition hover:border-accent"
       >
         <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent">
@@ -215,10 +215,10 @@ export function DashboardPage() {
         </span>
         <span className="flex-1">
           <span className="block font-display font-semibold">Untung Rugi Bisnes (PNL)</span>
-          <span className="block text-sm text-muted">Jana laporan PNL daripada statement bank</span>
+          <span className="block text-sm text-muted">Untung bersih ikut bulan, suku atau tahun</span>
         </span>
         <ChevronRight className="size-5 text-muted" aria-hidden />
-      </a>
+      </Link>
     </div>
   );
 }

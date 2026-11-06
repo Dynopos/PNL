@@ -90,7 +90,7 @@ export function SettingsPage() {
         <h2 className="font-display font-semibold">Alat lain</h2>
         <a href="/pnl/index.html" className="mt-3 flex min-h-11 items-center gap-3 text-sm font-semibold text-accent">
           <FileSpreadsheet className="size-5" aria-hidden />
-          Untung Rugi Bisnes (PNL)
+          PNL lama (alat statement bank berasingan)
         </a>
       </section>
 
