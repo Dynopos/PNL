@@ -17,6 +17,7 @@ import { TransactionsPage } from '../pages/TransactionsPage';
 
 const ReportsPage = lazy(() => import('../pages/ReportsPage').then((m) => ({ default: m.ReportsPage })));
 const PnlPage = lazy(() => import('../pages/PnlPage').then((m) => ({ default: m.PnlPage })));
+const LedgerPage = lazy(() => import('../pages/LedgerPage').then((m) => ({ default: m.LedgerPage })));
 const ReconciliationPage = lazy(() =>
   import('../pages/ReconciliationPage').then((m) => ({ default: m.ReconciliationPage })),
 );
@@ -73,6 +74,14 @@ export function App({ client }: { client: SupabaseClient | null }) {
                   element={
                     <Lazy>
                       <PnlPage />
+                    </Lazy>
+                  }
+                />
+                <Route
+                  path="laporan/lejar"
+                  element={
+                    <Lazy>
+                      <LedgerPage />
                     </Lazy>
                   }
                 />

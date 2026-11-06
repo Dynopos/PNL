@@ -20,6 +20,7 @@ describe('buildPnl', () => {
     expect(p.margin).toBeCloseTo(3549.8 / 6000.1);
     expect(p.drawings).toBe(300.05);
     expect(p.drawingsCount).toBe(3);
+    expect(p.drawingsKey).toBe('Kegunaan Peribadi Pemilik');
     expect(p.retained).toBe(3249.75);
     expect(p.expenses[0]!.ofRevenue).toBeCloseTo(2000 / 6000.1);
   });
@@ -29,7 +30,7 @@ describe('buildPnl', () => {
     expect(p.netProfit).toBe(-109.99);
     expect(p.margin).toBeNull();
     expect(p.expenses.every((l) => l.ofRevenue === null)).toBe(true);
-    expect(p.expenses[1]!.key).toBe('none:Tiada kategori');
+    expect(p.expenses[1]!.key).toBe('tiada-expense');
     expect(p.empty).toBe(false);
     expect(buildPnl([], []).empty).toBe(true);
   });

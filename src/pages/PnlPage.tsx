@@ -1,17 +1,10 @@
-import { ChevronLeft, ChevronRight, TrendingDown, TrendingUp } from 'lucide-react';
-import { useState } from 'react';
+import { ChevronRight, TrendingDown, TrendingUp } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Spinner } from '../components/Spinner';
 import { useAccount } from '../features/accounts/AccountProvider';
 import { useAuth } from '../features/auth/AuthProvider';
-import {
-  buildPnl,
-  change,
-  PNL_PERIODS,
-  periodLabel,
-  pnlPeriod,
-  type PnlLine,
-  type PnlPeriodKind,
-} from '../features/reports/pnl';
+import { PeriodPicker, usePeriodParams } from '../features/reports/PeriodPicker';
+import { buildPnl, change, periodLabel, type PnlLine } from '../features/reports/pnl';
 import { ReportsNav } from '../features/reports/ReportsNav';
 import { friendlyError, getTotalsByCategory } from '../features/transactions/api';
 import { useLoad } from '../lib/data';
@@ -21,21 +14,15 @@ const card = 'rounded-2xl border border-line bg-surface p-5';
 const pending = () => new Promise<never>(() => {});
 const signed = (n: number) => `${n < 0 ? '−' : ''}${formatMYR(Math.abs(n))}`;
 const pct = (f: number) => `${(f * 100).toLocaleString('ms-MY', { maximumFractionDigits: 1 })}%`;
-const shortDate = (iso: string) =>
-  new Intl.DateTimeFormat('ms-MY', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(
-    new Date(`${iso}T00:00:00Z`),
-  );
 
 export function PnlPage() {
   const { client } = useAuth();
   const { account, error: accountError } = useAccount();
   const accountId = account?.id;
   const today = dateInKL();
-  const [kind, setKind] = useState<PnlPeriodKind>('month');
-  const [steps, setSteps] = useState(0);
-
-  const period = pnlPeriod(kind, today, today, steps);
-  const previous = pnlPeriod(kind, today, today, steps - 1);
+  const periodState = usePeriodParams(today);
+  const { kind, period, previous, query } = periodState;
+  const ledgerLink = (key: string) => `/laporan/lejar?akaun=${encodeURIComponent(key)}&${query}`;
 
   const report = useLoad(async () => {
     if (!accountId) return pending();
@@ -58,50 +45,7 @@ export function PnlPage() {
       <h1 className="font-display text-2xl font-bold tracking-tight">Laporan</h1>
       <ReportsNav />
 
-      <div role="tablist" aria-label="Jenis tempoh" className="grid grid-cols-3 rounded-xl bg-surface-2 p-1 text-sm font-semibold">
-        {PNL_PERIODS.map((k) => (
-          <button
-            key={k.value}
-            type="button"
-            role="tab"
-            aria-selected={kind === k.value}
-            onClick={() => {
-              setKind(k.value);
-              setSteps(0);
-            }}
-            className={`min-h-11 rounded-lg transition ${kind === k.value ? 'bg-surface text-ink shadow-sm' : 'text-muted'}`}
-          >
-            {k.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex items-center justify-between gap-2">
-        <button
-          type="button"
-          aria-label="Tempoh sebelumnya"
-          onClick={() => setSteps((s) => s - 1)}
-          className="grid size-11 place-items-center rounded-xl border border-line bg-surface text-muted hover:text-ink"
-        >
-          <ChevronLeft className="size-5" aria-hidden />
-        </button>
-        <div className="text-center">
-          <p className="font-display text-lg font-semibold">{periodLabel(kind, period.from)}</p>
-          <p className="text-xs text-muted">
-            {shortDate(period.from)} – {shortDate(period.to)}
-            {!period.complete && ' · belum tamat'}
-          </p>
-        </div>
-        <button
-          type="button"
-          aria-label="Tempoh seterusnya"
-          disabled={steps >= 0}
-          onClick={() => setSteps((s) => s + 1)}
-          className="grid size-11 place-items-center rounded-xl border border-line bg-surface text-muted hover:text-ink disabled:opacity-30"
-        >
-          <ChevronRight className="size-5" aria-hidden />
-        </button>
-      </div>
+      <PeriodPicker state={periodState} />
 
       {report.error || accountError ? (
         <p role="alert" className="rounded-xl bg-danger-soft px-4 py-3 text-sm font-medium text-danger">
@@ -141,11 +85,11 @@ export function PnlPage() {
             <p className="text-xs text-muted">{account?.account_name ?? 'Bisnes'} · {periodLabel(kind, period.from)}</p>
 
             <Heading>Pendapatan</Heading>
-            <Lines lines={p.revenue} empty="Tiada pendapatan" showShare={false} />
+            <Lines lines={p.revenue} empty="Tiada pendapatan" showShare={false} link={ledgerLink} />
             <Total label="Jumlah pendapatan" amount={p.revenueTotal} />
 
             <Heading>Perbelanjaan bisnes</Heading>
-            <Lines lines={p.expenses} empty="Tiada perbelanjaan bisnes" showShare={p.margin !== null} />
+            <Lines lines={p.expenses} empty="Tiada perbelanjaan bisnes" showShare={p.margin !== null} link={ledgerLink} />
             <Total label="Jumlah perbelanjaan" amount={-p.expenseTotal} />
 
             <div className="mt-4 flex items-baseline justify-between gap-3 border-y-4 border-double border-line py-3">
@@ -157,13 +101,17 @@ export function PnlPage() {
 
             {p.drawings > 0 && (
               <>
-                <div className="mt-3 flex items-baseline justify-between gap-3 text-sm">
-                  <span>
+                <Link
+                  to={p.drawingsKey ? ledgerLink(p.drawingsKey) : '#'}
+                  className="mt-3 flex items-center justify-between gap-3 text-sm hover:text-accent"
+                >
+                  <span className="flex-1">
                     Tolak: ambilan pemilik
                     <span className="block text-xs text-muted">Kegunaan peribadi · {p.drawingsCount} transaksi</span>
                   </span>
                   <span className="tabular-nums">{signed(-p.drawings)}</span>
-                </div>
+                  <ChevronRight className="size-4 shrink-0 text-muted" aria-hidden />
+                </Link>
                 <Total label="Baki kekal dalam bisnes" amount={p.retained} />
               </>
             )}
@@ -183,13 +131,24 @@ function Heading({ children }: { children: string }) {
   return <h3 className="mt-5 border-b border-line pb-1.5 text-xs font-bold uppercase tracking-wider text-muted">{children}</h3>;
 }
 
-function Lines({ lines, empty, showShare }: { lines: PnlLine[]; empty: string; showShare: boolean }) {
+function Lines({
+  lines,
+  empty,
+  showShare,
+  link,
+}: {
+  lines: PnlLine[];
+  empty: string;
+  showShare: boolean;
+  link: (key: string) => string;
+}) {
   if (lines.length === 0) return <p className="py-2 text-sm text-muted">{empty}</p>;
   return (
     <ul className="divide-y divide-line/60">
       {lines.map((l) => (
-        <li key={l.key} className="flex items-baseline justify-between gap-3 py-2 text-sm">
-          <span className="min-w-0">
+        <li key={l.key}>
+          <Link to={link(l.key)} className="flex items-center justify-between gap-3 py-2 text-sm hover:text-accent">
+          <span className="min-w-0 flex-1">
             <span className="block truncate">{l.label}</span>
             <span className="text-xs text-muted">
               {l.count} transaksi
@@ -197,6 +156,8 @@ function Lines({ lines, empty, showShare }: { lines: PnlLine[]; empty: string; s
             </span>
           </span>
           <span className="shrink-0 tabular-nums">{formatMYR(l.amount)}</span>
+          <ChevronRight className="size-4 shrink-0 text-muted" aria-hidden />
+          </Link>
         </li>
       ))}
     </ul>

@@ -58,6 +58,8 @@ export interface Pnl {
   margin: number | null;
   drawings: number;
   drawingsCount: number;
+  /** Ledger account of the owner's drawings, when there are any. */
+  drawingsKey: string | null;
   retained: number;
   empty: boolean;
 }
@@ -73,8 +75,8 @@ export function buildPnl(income: CategoryTotal[], expense: CategoryTotal[]): Pnl
   const revenueSen = sen(income);
   const expenseSen = sen(business);
   const drawingsSen = sen(owner);
-  const line = (r: CategoryTotal): PnlLine => ({
-    key: r.category_id ?? `none:${r.category_name}`,
+  const line = (type: 'income' | 'expense') => (r: CategoryTotal): PnlLine => ({
+    key: r.category_id ?? `tiada-${type}`,
     categoryId: r.category_id,
     label: r.category_name,
     amount: Number(r.total),
@@ -84,14 +86,15 @@ export function buildPnl(income: CategoryTotal[], expense: CategoryTotal[]): Pnl
   const byAmount = (a: PnlLine, b: PnlLine) => b.amount - a.amount || a.label.localeCompare(b.label);
   const netSen = revenueSen - expenseSen;
   return {
-    revenue: income.map(line).sort(byAmount),
+    revenue: income.map(line('income')).sort(byAmount),
     revenueTotal: fromSen(revenueSen),
-    expenses: business.map(line).sort(byAmount),
+    expenses: business.map(line('expense')).sort(byAmount),
     expenseTotal: fromSen(expenseSen),
     netProfit: fromSen(netSen),
     margin: revenueSen > 0 ? netSen / revenueSen : null,
     drawings: fromSen(drawingsSen),
     drawingsCount: owner.reduce((s, r) => s + r.tx_count, 0),
+    drawingsKey: owner[0]?.category_id ?? null,
     retained: fromSen(netSen - drawingsSen),
     empty: income.length === 0 && expense.length === 0,
   };

@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 const LINKS = [
   { to: '/laporan', label: 'Ringkasan', end: true },
   { to: '/laporan/pnl', label: 'Untung Rugi', end: false },
+  { to: '/laporan/lejar', label: 'Lejar Am', end: false },
 ];
 
 /** Switches between the report pages under Laporan. */

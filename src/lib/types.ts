@@ -17,7 +17,7 @@ export interface Transaction {
   currency: string;
   transaction_type: EntryType;
   transaction_date: string;
-  source: 'voice' | 'manual';
+  source: 'voice' | 'manual' | 'bank';
   created_at: string;
 }
 
