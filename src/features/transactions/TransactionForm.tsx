@@ -1,4 +1,5 @@
 import { useId, useState, type FormEvent, type ReactNode } from 'react';
+import { GL_ACCOUNTS, glOf } from '../reports/gl';
 import { inputClass, labelClass, primaryButton } from '../../components/fieldStyles';
 import type { Category, EntryType } from '../../lib/types';
 import { validateDraft, type DraftErrors, type TransactionDraft, type TransactionInput } from './validation';
@@ -124,17 +125,32 @@ export function TransactionForm({
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div>
+        <div className="col-span-2">
           <label htmlFor={`${id}-category_id`} className={labelClass}>
             Kategori
           </label>
           <select {...field('category_id')} className={inputClass} value={draft.category_id} onChange={set('category_id')}>
             <option value="">Tiada kategori</option>
-            {categories.filter((c) => c.type === draft.transaction_type).map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
+            {draft.transaction_type === 'income'
+              ? categories
+                  .filter((c) => c.type === 'income')
+                  .map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))
+              : GL_ACCOUNTS.filter((a) => a.code !== '4000').map((a) => {
+                  const mine = categories.filter((c) => c.type === 'expense' && glOf(c, 'expense') === a.code);
+                  return mine.length === 0 ? null : (
+                    <optgroup key={a.code} label={`${a.code} ${a.name}`}>
+                      {mine.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  );
+                })}
           </select>
         </div>
         <div>

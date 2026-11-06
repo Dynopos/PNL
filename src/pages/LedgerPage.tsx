@@ -20,6 +20,7 @@ import {
 import { PeriodPicker, usePeriodParams } from '../features/reports/PeriodPicker';
 import { periodLabel } from '../features/reports/pnl';
 import { ReportsNav } from '../features/reports/ReportsNav';
+import { useTransactionSheet } from '../features/transactions/TransactionSheet';
 import { friendlyError, getCashflowSummary } from '../features/transactions/api';
 import { useLoad } from '../lib/data';
 import { addDays } from '../lib/dates';
@@ -245,6 +246,7 @@ function AccountView({
   loading: boolean;
 }) {
   const [shown, setShown] = useState(PAGE);
+  const { openEdit } = useTransactionSheet();
   const acct = GL_BY_CODE.get(ledger.code as GlCode);
   const chosen = categories.find((c) => c.key === categoryKey);
 
@@ -330,9 +332,19 @@ function AccountView({
             <span>Tarikh · Butiran</span>
             <span>Dr / Kr · Baki</span>
           </div>
+          <p className="border-b border-line px-4 py-2 text-xs text-muted">
+            {ledger.code === '6100'
+              ? 'Ada yang sebenarnya belanja bisnes? Tekan transaksi itu dan tukar kategorinya.'
+              : 'Tekan transaksi untuk tukar kategori atau butiran.'}
+          </p>
           <ul className="divide-y divide-line/60">
             {ledger.rows.slice(0, shown).map((r) => (
-              <li key={r.tx.id} className="flex items-start justify-between gap-3 px-4 py-2.5 text-sm">
+              <li key={r.tx.id}>
+                <button
+                  type="button"
+                  onClick={() => openEdit(r.tx)}
+                  className="flex w-full items-start justify-between gap-3 px-4 py-2.5 text-left text-sm transition hover:bg-surface-2"
+                >
                 <span className="min-w-0">
                   <span className="block truncate font-medium">{describeTx(r.tx)}</span>
                   <span className="block truncate text-xs text-muted">
@@ -345,6 +357,7 @@ function AccountView({
                   </span>
                   <span className="block text-xs text-muted">{signed(r.balance)}</span>
                 </span>
+                </button>
               </li>
             ))}
           </ul>
